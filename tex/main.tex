@@ -1,0 +1,832 @@
+\newif \ifcolor \colortrue
+% \colorfalse
+\newif \ifdraft \drafttrue
+% \draftfalse
+
+\documentclass{article}
+
+\usepackage{local}
+
+\begin{document}
+
+\begin{figure}
+\begin{grammar}
+\entry[Terms]{\za}{
+  \branch {\zx}
+  \branch {\Lam \zx \za}
+  \branch {\App \za \za}
+  \branch {\Gen \za}
+  \branch {\Inst \za}
+}\\\continue{
+  \branch {\Unit}
+  \branch {\Pair \za \za}
+  \branch {\Fst \za}
+  \branch {\Snd \za}
+}\\\continue{
+  \branch {\Absurd \za}
+  \branch {\Inl \za}
+  \branch {\Inr \za}
+  \branch {\Match \za \zx \za \zx \za}
+}\\
+\entry[Kinds]{\ka}{
+  \branch {\KStar}
+  \branch {\KOne}
+  \branch {\KProd \ka \ka}
+  \branch {\KRes \tva \ka \Pa}
+}\\
+\entry[Types]{\ta, \tb}{
+  \branch {\tva}
+  \branch {\TUnit}
+  \branch {\TPair \ta \ta}
+  \branch {\TFst \ta}
+  \branch {\TSnd \ta}
+}\\\continue{
+  \branch {\TArr \ta \ta}
+  \branch {\TOne}
+  \branch {\TProd \ta \ta}
+  \branch {\TVoid}
+  \branch {\TSum \ta \ta}
+  \branch {\TFor \tva \ka \ta}
+  \branch {\TPi \tva \ka \ta}
+  \branch {\TMu \tva \ta}
+  \branch {\TBot}
+  \branch {\TTop}
+}\\
+\entry[Props]{\Pa}{
+  \branch {\PTrue}
+  \branch {\PAnd \Pa \Pa}
+  \branch {\PCoer \Ha \ta \ta}
+  \branch {\PExi \ka}
+  \branch {\PFor \tva \ka \Pa}
+}\\
+\entry[Type envs]{\Ha}{
+  \branch {\HNil}
+  \branch {\HCons \Ha \tva \ka}
+}\\
+\entry[Prop envs]{\Ya}{
+  \branch {\YNil}
+  \branch {\YCons \Ya \zc \Pa}
+}\\
+\entry[Term envs]{\Ga}{
+  \branch {\GNil}
+  \branch {\GCons \Ga \zx \ta}
+}\\
+\entry[\llap{Well-foundness }signs]{\rec}{
+  \branch {\NE}
+  \branch {\WF}
+}\\
+\end{grammar}
+\caption{Syntax}
+\label{fig:syntax}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\infer[RECVar]{}{%
+  \jrec \tva \tva \NE
+}
+
+\infer[RECArr]{%
+  \jrec \tva \ta \NE \\
+  \jrec \tva \tb \NE
+}{%
+  \jrec \tva {\TArr \ta \tb} \WF
+}
+
+\infer[RECProd]{%
+  \jrec \tva \ta \NE \\
+  \jrec \tva \tb \NE
+}{%
+  \jrec \tva {\TProd \ta \tb} \WF
+}
+
+\infer[RECSum]{%
+  \jrec \tva \ta \NE \\
+  \jrec \tva \tb \NE
+}{%
+  \jrec \tva {\TSum \ta \tb} \WF
+}
+
+\infer[RECFor]{%
+  \tva \notin \fv\ka \\
+  \jrec \tva \ta \rec
+}{%
+  \jrec \tva {\TFor \tvb \ka \ta} \rec
+}
+
+\infer[RECPi]{%
+  \tva \notin \fv\ka \\
+  \jrec \tva \ta \NE
+}{%
+  \jrec \tva {\TPi \tvb \ka \ta} \WF
+}
+
+\infer[RECMu]{%
+  \jrec \tvb \ta \WF \\
+  \jrec \tva \ta \rec
+}{%
+  \jrec \tva {\TMu \tvb \ta} \rec
+}
+
+\infer[RECwf]{%
+  \tva \notin \fv{\ta}
+}{%
+  \jrec \tva \ta \WF
+}
+
+\infer[RECne]{%
+  \jrec \tva \ta \WF
+}{%
+  \jrec \tva \ta \NE
+}
+\end{mathpar}
+\caption{Well-foundness judgment relation}
+\label{fig:wfJudgment}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\infer[EQrefl]{}{%
+  \jeq \ta \ta
+}
+
+\infer[EQsym]{%
+  \jeq \ta \tb
+}{%
+  \jeq \tb \ta
+}
+
+\infer[EQtrans]{%
+  \jeq \tai \taii \\
+  \jeq \taii \taiii
+}{%
+  \jeq \tai \taiii
+}
+
+\infer[EQTFstPair]{}{%
+  \jeq {\TFst {\TPair \ta \tb}} \ta
+}
+
+\infer[EQTSndPair]{}{%
+  \jeq {\TSnd {\TPair \ta \tb}} \tb
+}
+\end{mathpar}
+\caption{Equality judgment relation}
+\label{fig:eqJudgment}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\infer[JKexi]{%
+  \Ex \pa \JP \Ha \YNil \YNil \PExi \ka \\
+  \modE{\Ex \Ka \Jwf \Ha \ka}
+}{%
+  \Ex {\kexi \pa \Ka} \JK \Ha \ka
+}
+\end{mathpar}
+\caption{Kind judgment relation}
+\label{fig:kindJudgment}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\infer[JTeq]{%
+  \Ex \Ta \JT \Ha \ta \ka \\
+  \jeq \ka \kap \\
+  \modE{\Ex \Ka \Jwf \Ha \kap}
+}{%
+  \Ex {\teq \Ta \Ka} \JT \Ha \ta \kap
+}
+
+\infer[JTVar]{%
+  (\tva : \ka) \in \Ha
+}{%
+  \Ex \tva \JT \Ha \tva \ka
+}
+
+\infer[JTArr]{%
+  \Ex \Ta \JT \Ha \ta \KStar \\
+  \Ex \Tb \JT \Ha \tb \KStar
+}{%
+  \Ex {\TArr \Ta \Tb} \JT \Ha {\TArr \ta \tb} \KStar
+}
+
+\infer[JTOne]{}{%
+  \Ex \TOne \JT \Ha \TOne \KStar
+}
+
+\infer[JTProd]{%
+  \Ex \Ta \JT \Ha \ta \KStar \\
+  \Ex \Tb \JT \Ha \tb \KStar
+}{%
+  \Ex {\TProd \Ta \Tb} \JT \Ha {\TProd \ta \tb} \KStar
+}
+
+\infer[JTVoid]{}{%
+  \Ex \TVoid \JT \Ha \TVoid \KStar
+}
+
+\infer[JTSum]{%
+  \Ex \Ta \JT \Ha \ta \KStar \\
+  \Ex \Tb \JT \Ha \tb \KStar
+}{%
+  \Ex {\TSum \Ta \Tb} \JT \Ha {\TSum \ta \tb} \KStar
+}
+
+\infer[JTFor]{%
+  \modE{\Ex \Ka \Jwf \Ha \ka} \\
+  \Ex \Ta \JT {\HCons \Ha \tva \ka} \ta \KStar
+}{%
+  \Ex {\TFor \tva \Ka \Ta} \JT \Ha {\TFor \tva \ka \ta} \KStar
+}
+
+\infer[JTPi]{%
+  \modE{\Ex \Ka \Jwf \Ha \ka} \\
+  \Ex \Ta \JT {\HCons \Ha \tva \ka} \ta \KStar
+}{%
+  \Ex {\TPi \tva \Ka \Ta} \JT \Ha {\TPi \tva \ka \ta} \KStar
+}
+
+\infer[JTMu]{%
+  \jrec \tva \ta \WF \\
+  \Ex \Ta \JT {\HCons \Ha \tva \KStar} \ta \KStar
+}{%
+  \modR{\Ex {\TMu \tva \Ta} \JT \Ha {\TMu \tva \ta} \KStar}
+}
+
+\infer[JTBot]{}{%
+  \Ex \TBot \JT \Ha \TBot \KStar
+}
+
+\infer[JTTop]{}{%
+  \Ex \TTop \JT \Ha \TTop \KStar
+}
+
+\infer[JTUnit]{}{%
+  \Ex \TUnit \JT \Ha \TUnit \KOne
+}
+
+\infer[JTPair]{%
+  \Ex \Tai \JT \Ha \tai \kai \\
+  \Ex \Taii \JT \Ha \taii \kaii
+}{%
+  \Ex {\TPair \Tai \Taii} \JT \Ha {\TPair \tai \taii} \KProd \kai \kaii
+}
+
+\infer[JTFst]{%
+  \Ex \Ta \JT \Ha \ta \KProd \kai \kaii
+}{%
+  \Ex {\TFst \Ta} \JT \Ha {\TFst \ta} \kai
+}
+
+\infer[JTSnd]{%
+  \Ex \Ta \JT \Ha \ta \KProd \kai \kaii
+}{%
+  \Ex {\TSnd \Ta} \JT \Ha {\TSnd \ta} \kaii
+}
+
+\infer[JTPack]{%
+  \modE{\Ex \Qa \Jwf {\HCons \Ha \tva \ka} \Pa} \\
+  \Ex \Ta \JT \Ha \ta \ka \\
+  \Ex \pa \JP \Ha \YNil \YNil \Subst \Pa \tva \ta
+}{%
+  \Ex {\tPack \tva \Ta \pa \Qa} \JT \Ha \ta \KRes \tva \ka \Pa
+}
+
+\infer[JTUnpack]{%
+  \Ex \Ta \JT \Ha \ta \KRes \tva \ka \Pa
+}{%
+  \Ex {\tUnpack \Ta} \JT \Ha \ta \ka
+}
+\end{mathpar}
+\caption{Type judgment relation}
+\label{fig:typeJudgment}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\infer[JPeq]{%
+  \Ex \pa \JP \Ha \Yao \Yai \Pa \\
+  \jeq \Pa \Pap \\
+  \modE{\Ex \Qa \Jwf \Ha \Pap}
+}{%
+  \Ex {\peq \pa \Qa} \JP \Ha \Yao \Yai \Pap
+}
+
+\infer[JPVar]{%
+  (\zc : \Pa) \in \Yao
+}{%
+  \modR{\Ex \zc \JP \Ha \Yao \Yai \Pa}
+}
+
+\infer[JPTrue]{}{%
+  \Ex \pTrue \JP \Ha \Yao \Yai \PTrue
+}
+
+\infer[JPAndPair]{%
+  \Ex \pai \JP \Ha \Yao \Yai \Pai \\
+  \Ex \paii \JP \Ha \Yao \Yai \Paii
+}{%
+  \Ex {\pPair \pai \paii} \JP \Ha \Yao \Yai \PAnd \Pai \Paii
+}
+
+\infer[JPAndFst]{%
+  \Ex \pa \JP \Ha \Yao \Yai \PAnd \Pai \Paii
+}{%
+  \Ex {\pFst \pa} \JP \Ha \Yao \Yai \Pai
+}
+
+\infer[JPAndSnd]{%
+  \Ex \pa \JP \Ha \Yao \Yai \PAnd \Pai \Paii
+}{%
+  \Ex {\pSnd \pa} \JP \Ha \Yao \Yai \Paii
+}
+
+\infer[JPExi]{%
+  \Ex \Ta \JT \Ha \ta \ka \\
+}{%
+  \Ex {\pExi \Ta} \JP \Ha \Yao \Yai \PExi \ka
+}
+
+\infer[JPForIntro]{%
+  \modE{\Ex \Ka \Jwf \Ha \ka} \\
+  \Ex \pa \JP {\HCons \Ha \tva \ka} \Yao \Yai \Pa \\
+  \tva \notin \fv{\Yao,\Yai}
+}{%
+  \Ex {\pLam \tva \Ka \pa} \JP \Ha \Yao \Yai \PFor \tva \ka \Pa
+}
+
+\infer[JPForElim]{%
+  \Ex \Ta \JT \Ha \ta \ka \\
+  \Ex \pa \JP \Ha \Yao \Yai \PFor \tva \ka \Pa
+}{%
+  \Ex {\pApp \pa \Ta} \JP \Ha \Yao \Yai \Subst \Pa \tva \ta
+}
+
+\infer[JPRes]{%
+  \Ex \Ta \JT \Ha \ta \KRes \tva \ka \Pa
+}{%
+  \Ex {\pRes \Ta} \JP \Ha \Yao \Yai \Subst \Pa \tva \ta
+}
+
+\infer[JPFix]{%
+  \modE{\Ex \Qa \Jwf \Ha \Pa} \\
+  \Ex \pa \JP \Ha \Yao {\YCons \Yai \zc \Pa} \Pa
+}{%
+  \modR{\Ex {\pFix \zc \Qa \pa} \JP \Ha \Yao \Yai \Pa}
+}
+
+\infer[JPCoer]{%
+  \Ex \ga \JC \Ha \Yao \Yai \Hap \tap \ta \\
+  \Ex \Ta \JT {\Happ \Ha \Hap} \tap \KStar
+}{%
+  \Ex {\pCoer \ga \Ta} \JP \Ha \Yao \Yai \PCoer \Hap \tap \ta
+}
+\end{mathpar}
+\caption{Prop judgment relation}
+\label{fig:propJudgment}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\infer[JCProp]{%
+  \Ex \pa \JP \Ha \Yao \Yai \PCoer \Hap \tap \ta
+}{%
+  \Ex \pa \JC \Ha \Yao \Yai \Hap \tap \ta
+}
+
+\infer[JCRefl]{}{%
+  \Ex \gRefl \JC \Ha \Yao \Yai \HNil \ta \ta
+}
+
+\infer[JCTrans]{%
+  \Ex \gai \JC {\Happ \Ha \Haii} \Yao \Yai \Hai \tai \taii \\
+  \Ex \gaii \JC \Ha \Yao \Yai \Haii \taii \taiii \\
+  \dom\Haii \cap \fv{\Yao,\Yai} = \varnothing
+}{%
+  \Ex {\gTrans \gaii \gai} \JC \Ha \Yao \Yai {\Happ \Haii \Hai} \tai \taiii
+}
+
+\infer[JCWeak]{%
+  \Ex \ga \JC \Ha \Yao \Yai \Hap \ta \tb \\
+  \dom\Hap \cap \fv\ta = \varnothing
+}{%
+  \Ex {\gWeak \ga} \JC \Ha \Yao \Yai \HNil \ta \tb
+}
+
+\infer[JCArr]{%
+  \modS{\JH \Ha \Hap} \\
+  \modS{\JT {\Happ \Ha \Hap} \tap \KStar} \\
+  \modS{\JT {\Happ \Ha \Hap} \tbp \KStar} \\
+  \modE{\Ex \Ta \JT \Ha \ta \KStar} \\\\
+  \Ex \gai \JC {\Happ \Ha \Hap} {\Yapp \Yao \Yai} \YNil \HNil \ta \tap \\
+  \Ex \gaii \JC \Ha {\Yapp \Yao \Yai} \YNil \Hap \tbp \tb \\
+  \dom\Hap \cap \fv{\Yao,\Yai,\ta} = \varnothing
+}{%
+  \Ex {\gArr \gai \Ta \gaii} \JC \Ha \Yao \Yai \Hap {\TArr \tap \tbp} {\TArr \ta \tb}
+}
+
+\infer[JCProd]{%
+  \modS{\JH \Ha \Hap} \\
+  \modS{\JT {\Happ \Ha \Hap} \tap \KStar} \\
+  \modS{\JT {\Happ \Ha \Hap} \tbp \KStar} \\\\
+  \Ex \gai \JC \Ha {\Yapp \Yao \Yai} \YNil \Hap \tap \ta \\
+  \Ex \gaii \JC \Ha {\Yapp \Yao \Yai} \YNil \Hap \tbp \tb
+}{%
+  \Ex {\gProd \gai \gaii} \JC \Ha \Yao \Yai \Hap {\TProd \tap \tbp} {\TProd \ta \tb}
+}
+
+\infer[JCSum]{%
+  \modS{\JH \Ha \Hap} \\
+  \modS{\JT {\Happ \Ha \Hap} \tap \KStar} \\
+  \modS{\JT {\Happ \Ha \Hap} \tbp \KStar} \\\\
+  \Ex \gai \JC \Ha {\Yapp \Yao \Yai} \YNil \Hap \tap \ta \\
+  \Ex \gaii \JC \Ha {\Yapp \Yao \Yai} \YNil \Hap \tbp \tb
+}{%
+  \Ex {\gSum \gai \gaii} \JC \Ha \Yao \Yai \Hap {\TSum \tap \tbp} {\TSum \ta \tb}
+}
+
+\infer[JCPi]{%
+  \modE{\Ex \Ka \Jwf \Ha \ka} \\
+  \Ex \ha \JH \Ha \Hap \\
+  \modS{\JT {\HCons {\Happ \Ha \Hap} \tvap \kap} \tap \KStar} \\
+  \Ex \Tb \JT {\Happ {\HCons \Ha \tva \ka} \Hap} \tbp \kap \\
+  \Ex \ga \JC {\HCons \Ha \tva \ka} {\Yapp \Yao \Yai} \YNil \Hap {\Subst \tap \tvap \tbp} \ta \\
+  \tva \notin \fv{\Yao,\Yai,\Hap,\kap,\tap} \\
+}{%
+  \Ex {\gPi \ha \tva \Ka \ga \tvap \Tb}
+  \JC \Ha \Yao \Yai \Hap {\TPi \tvap \kap \tap} {\TPi \tva \ka \ta}
+}
+
+\infer[JCGen]{%
+  \Ex \ba \JK \Ha \ka \\
+  \modS{\JT {\HCons \Ha \tva \ka} \ta \KStar}
+}{%
+  \Ex {\gGen \tva \ba} \JC \Ha \Yao \Yai {\HCons \HNil \tva \ka} \ta {\TFor \tva \ka \ta}
+}
+
+\infer[JCInst]{%
+  \modS{\JT {\HCons \Ha \tva \ka} \ta \KStar} \\
+  \Ex \Tb \JT \Ha \tb \ka
+}{%
+  \Ex {\gInst \Tb} \JC \Ha \Yao \Yai \HNil {\TFor \tva \ka \ta} {\Subst \ta \tva \tb}
+}
+
+\infer[JCUnfold]{%
+  \modS{\jrec \tva \ta \WF} \\
+  \modS{\JT {\HCons \Ha \tva \KStar} \ta \KStar}
+}{%
+  \modR{\Ex \gUnfold
+        \JC \Ha \Yao \Yai \HNil {\TMu \tva \ta} {\Subst \ta \tva {\TMu \tva \ta}}}
+}
+
+\infer[JCFold]{
+  \jrec \tva \ta \WF \\
+  \Ex \Ta \JT {\HCons \Ha \tva \KStar} \ta \KStar
+}{%
+  \modR{\Ex {\gFold \tva \Ta}
+        \JC \Ha \Yao \Yai \HNil {\Subst \ta \tva {\TMu \tva \ta}} {\TMu \tva \ta}}
+}
+
+\infer[JCTop]{%
+  \modS{\JT \Ha \ta \KStar}
+}{%
+  \Ex \gTop \JC \Ha \Yao \Yai \HNil \ta \TTop
+}
+
+\infer[JCBot]{%
+  \Ex \Ta \JT \Ha \ta \KStar
+}{%
+  \Ex {\gBot \Ta} \JC \Ha \Yao \Yai \HNil \TBot \ta
+}
+\end{mathpar}
+\caption{Coercion judgment relation}
+\label{fig:coerJudgment}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\infer[JHNil]{}{%
+  \Ex \HNil \JH \Ha \HNil
+}
+
+\infer[JHCons]{%
+  \Ex \ha \JH \Ha \Hap \\
+  \Ex \ba \JK {\Happ \Ha \Hap} \ka
+}{%
+  \Ex {\HCons \ha \tva \ba} \JH \Ha \HCons \Hap \tva \ka
+}
+
+\infer[JGNil]{}{%
+  \JG \Ha \GNil
+}
+
+\infer[JGCons]{%
+  \JG \Ha \Ga \\
+  \JT \Ha \ta \KStar
+}{%
+  \JG \Ha {\GCons \Ga \zx \ta}
+}
+\end{mathpar}
+\caption{Environments judgment relation}
+\label{fig:envJudgment}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\infer[WKStar]{}{%
+  \Ex \KStar \Jwf \Ha \KStar
+}
+
+\infer[WKOne]{}{%
+  \Ex \KOne \Jwf \Ha \KOne
+}
+
+\infer[WKProd]{%
+  \Ex \Kai \Jwf \Ha \kai \\
+  \Ex \Kaii \Jwf \Ha \kaii
+}{%
+  \Ex {\KProd \Kai \Kaii}\Jwf \Ha \KProd \kai \kaii
+}
+
+\infer[WKRes]{%
+  \Ex \Ka \Jwf \Ha \ka \\
+  \Ex \Qa \Jwf {\HCons \Ha \tva \ka} \Pa
+}{%
+  \Ex {\KRes \tva \Ka \Qa} \Jwf \Ha \KRes \tva \ka \Pa
+}
+
+\infer[WPTrue]{}{%
+  \Ex \PTrue \Jwf \Ha \PTrue
+}
+
+\infer[WPAnd]{%
+  \Ex \Qai \Jwf \Ha \Pai \\
+  \Ex \Qaii \Jwf \Ha \Paii
+}{%
+  \Ex {\PAnd \Qai \Qaii} \Jwf \Ha \PAnd \Pai \Paii
+}
+
+\infer[WPCoer]{%
+  \Ex \ha \JH \Ha \Hap \\
+  \Ex \Ta \JT {\Happ \Ha \Hap} \tap \KStar \\
+  \Ex \Tb \JT \Ha \ta \KStar
+}{%
+  \Ex {\PCoer \ha \Ta \Tb} \Jwf \Ha \PCoer \Hap \tap \ta
+}
+
+\infer[WPExi]{%
+  \Ex \Ka \Jwf \Ha \ka
+}{%
+  \Ex {\PExi \Ka} \Jwf \Ha \PExi \ka
+}
+
+\infer[WPFor]{%
+  \Ex \Ka \Jwf \Ha \ka \\
+  \Ex \Qa \Jwf {\HCons \Ha \tva \ka} \Pa
+}{%
+  \Ex {\PFor \tva \Ka \Qa} \Jwf \Ha \PFor \tva \ka \Pa
+}
+
+\infer[WHNil]{}{%
+  \Jwf \Ha \HNil
+}
+
+\infer[WHCons]{%
+  \Jwf \Ha \Hap \\
+  \Jwf {\Happ \Ha \Hap} \ka
+}{%
+  \Jwf \Ha \HCons \Hap \tva \ka
+}
+
+\infer[WYNil]{}{%
+  \Jwf \Ha \YNil
+}
+
+\infer[WYCons]{%
+  \Jwf \Ha \Ya \\
+  \Jwf \Ha \Pa
+}{%
+  \Jwf \Ha \YCons \Ya \zc \Pa
+}
+\end{mathpar}
+\caption{Extraction judgment relation}
+\label{fig:extractJudgment}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\infer[JVar]{%
+  \modS{\JT \Ha \ta \KStar} \\
+  (\zx : \ta) \in \Ga
+}{%
+  \Ex \zx \jterm \Ha \Ga \zx \ta
+}
+
+\infer[JLam]{%
+  \modS{\JT \Ha \tb \KStar} \\
+  \Ex \Ta \JT \Ha \ta \KStar \\
+  \Ex \Ma \jterm \Ha {\GCons \Ga \zx \ta} \za \tb
+}{%
+  \Ex {\eLam \zx \Ta \Ma} \jterm \Ha \Ga {\Lam \zx \za} {\TArr \ta \tb}
+}
+
+\infer[JApp]{%
+  \modS{\JT \Ha \ta \KStar} \\
+  \modS{\JT \Ha \tb \KStar} \\\\
+  \Ex \Ma \jterm \Ha \Ga \za {\TArr \ta \tb} \\
+  \Ex \Mb \jterm \Ha \Ga \zb \ta
+}{%
+  \Ex {\App \Ma \Mb} \jterm \Ha \Ga {\App \za \zb} \tb
+}
+
+\infer[JUnit]{}{%
+  \Ex \Unit \jterm \Ha \Ga \Unit \TOne
+}
+
+\infer[JPair]{%
+  \modS{\JT \Ha \ta \KStar} \\
+  \modS{\JT \Ha \tb \KStar} \\\\
+  \Ex \Ma \jterm \Ha \Ga \za \ta \\
+  \Ex \Mb \jterm \Ha \Ga \zb \tb
+}{%
+  \Ex {\Pair \Ma \Mb} \jterm \Ha \Ga {\Pair \za \zb} {\TProd \ta \tb}
+}
+
+\infer[JFst]{%
+  \modS{\JT \Ha \ta \KStar} \\
+  \modS{\JT \Ha \tb \KStar} \\\\
+  \Ex \Ma \jterm \Ha \Ga \za {\TProd \ta \tb}
+}{%
+  \Ex {\Fst \Ma} \jterm \Ha \Ga {\Fst \za} \ta
+}
+
+\infer[JSnd]{%
+  \modS{\JT \Ha \ta \KStar} \\
+  \modS{\JT \Ha \tb \KStar} \\\\
+  \Ex \Ma \jterm \Ha \Ga \za {\TProd \ta \tb}
+}{%
+  \Ex {\Snd \Ma} \jterm \Ha \Ga {\Snd \za} \tb
+}
+
+\infer[JAbsurd]{%
+  \Ex \Ma \jterm \Ha \Ga \za \TVoid \\
+  \Ex \Tb \JT \Ha \tb \KStar
+}{%
+  \Ex {\eAbsurd \Ma \Tb} \jterm \Ha \Ga {\Absurd \za} \tb
+}
+
+\infer[JInl]{%
+  \modS{\JT \Ha \ta \KStar} \\
+  \Ex \Tb \JT \Ha \tb \KStar \\
+  \Ex \Ma \jterm \Ha \Ga \za \ta
+}{%
+  \Ex {\eInl \Ma \Tb} \jterm \Ha \Ga {\Inl \za} {\TSum \ta \tb}
+}
+
+\infer[JInr]{%
+  \Ex \Ta \JT \Ha \ta \KStar \\
+  \modS{\JT \Ha \tb \KStar} \\
+  \Ex \Ma \jterm \Ha \Ga \za \tb
+}{%
+  \Ex {\eInr \Ta \Ma} \jterm \Ha \Ga {\Inr \za} {\TSum \ta \tb}
+}
+
+\infer[JMatch]{%
+  \modS{\JT \Ha \tai \KStar} \\
+  \modS{\JT \Ha \taii \KStar} \\
+  \modS{\JT \Ha \tb \KStar} \\\\
+  \Ex \Ma \jterm \Ha \Ga \za {\TSum \tai \taii} \\
+  \Ex \Mbi \jterm \Ha {\GCons \Ga \zxi \tai} \zbi \tb \\
+  \Ex \Mbii \jterm \Ha {\GCons \Ga \zxii \taii} \zbii \tb \\
+}{%
+  \Ex {\eMatch \Ma \zxi \Mbi \zxii \Mbii}
+  \jterm \Ha \Ga {\Match \za \zxi \zbi \zxii \zbii} \tb
+}
+
+\infer[JGen]{%
+  \modE{\Ex \Ka \Jwf \Ha \ka} \\
+  \modS{\JT {\HCons \Ha \tva \ka} \ta \KStar} \\
+  \Ex \Ma \jterm {\HCons \Ha \tva \ka} \Ga \za \ta \\
+  \tva \notin \fv\Ga
+}{%
+  \Ex {\eGen \tva \Ka \Ma} \jterm \Ha \Ga {\Gen \za} {\TPi \tva \ka \ta}
+}
+
+\infer[JInst]{%
+  \modS{\JT {\HCons \Ha \tva \ka} \ta \KStar} \\
+  \Ex \Ma \jterm \Ha \Ga \za {\TPi \tva \ka \ta} \\
+  \Ex \Tb \JT \Ha \tb \ka
+}{%
+  \Ex {\eInst \Ma \Tb} \jterm \Ha \Ga {\Inst \za} {\Subst \ta \tva \tb}
+}
+
+\infer[JCoer]{%
+  \modS{\JH \Ha \Hap} \\
+  \modS{\JT {\Happ \Ha \Hap} \ta \KStar} \\\\
+  \Ex \Ma \jterm {\Happ \Ha \Hap} \Ga \za \ta \\
+  \Ex \ga \JC \Ha \YNil \YNil \Hap \ta \tb \\
+  \dom\Hap \cap \fv\Ga = \varnothing
+}{%
+  \Ex {\eCoer \ga \Ma} \jterm \Ha \Ga \za \tb
+}
+\end{mathpar}
+\caption{Term judgment relation}
+\label{fig:termJudgment}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\begin{tabular}{{r@{$\;\;=\;\;$}l}}
+$\sem\KStar\eta$ & $\cCE$ \\
+$\sem\KOne\eta$ & $\KOne$ \\
+$\sem{\KProd \kai \kaii}\eta$ & $\KProd {\sem\kai\eta} {\sem\kaii\eta}$ \\
+$\sem{\KRes \tva \ka \Pa}\eta$ &
+  $\set{x \in \sem\ka\eta \mid \forall k\; \sem\Pa{\eta, \tva \mapsto x}^k}$ \\[1em]
+$\sem\tva\eta$ & $\eta(\tva)$ \\
+$\sem{\TArr \ta \tb}\eta$ & $\TArr{\sem\ta\eta}{\sem\tb\eta}$ \\
+$\sem{\TOne}\eta$ & $\TOne$ \\
+$\sem{\TProd \ta \tb}\eta$ & $\TProd{\sem\ta\eta}{\sem\tb\eta}$ \\
+$\sem{\TVoid}\eta$ & $\TVoid$ \\
+$\sem{\TSum \ta \tb}\eta$ & $\TSum{\sem\ta\eta}{\sem\tb\eta}$ \\
+$\sem{\TFor \tva \ka \ta}\eta$ & $\forall
+  \sem\ka\eta \; (\lambda x \mapsto \sem\ta{\eta, \tva \mapsto x})$ \\
+$\sem{\TPi \tva \ka \ta}\eta$ & $\Pi
+  \sem\ka\eta \; (\lambda x \mapsto \sem\ta{\eta, \tva \mapsto x})$ \\
+$\sem{\TMu \tva \ta}\eta$ & $\mu (\lambda x \mapsto \sem\ta{\eta, \tva
+  \mapsto x})$ \\
+$\sem\TBot\eta$ & $\TBot$ \\
+$\sem\TTop\eta$ & $\TTop$ \\[.5em]
+$\sem\TUnit\eta$ & $\TUnit$ \\
+$\sem{\TPair \ta \tb}\eta$ & $\TPair {\sem\ta\eta} {\sem\tb\eta}$ \\
+$\sem{\TFst \ta}\eta$ & $\TFst {\sem\ta\eta}$ \\
+$\sem{\TSnd \ta}\eta$ & $\TSnd {\sem\ta\eta}$ \\[1em]
+$\sem\PTrue\eta^k$ & $\PTrue$ \\
+$\sem{\PAnd \Pai \Paii}\eta^k$ & $\PAnd {\sem\Pai\eta^k} {\sem\Paii\eta^k}$ \\
+$\sem{\PCoer \Hap \tap \ta}\eta^k$ & $\forall \za < k\;
+  (\forall \etap \in \sem\Hap\eta\; \za \in \sem\tap{\eta,\etap})
+  \Rightarrow \za \in \sem\ta\eta$ \\
+$\sem{\PExi \ka}\eta^k$ & $\exists x \in \sem\ka\eta$ \\
+$\sem{\PFor \tva \ka \Pa}\eta^k$ & $\forall x \in \sem\ka\eta \;
+  \sem\Pa{\eta, \tva \mapsto x}^k$ \\[1em]
+$\sem\HNil\eta$ & $\set{\varnothing}$ \\
+$\sem{\HCons \Ha \tva \ka}\eta$ & $\set{\etap, \tva \mapsto x \mid \etap
+  \in \sem\Ha\eta \wedge x \in \sem\ka{\eta,\etap}}$ \\[1em]
+$\sem\YNil\eta^k$ & $\PTrue$ \\
+$\sem{\YCons \Ya \zc \Pa}\eta^k$ & $\sem\Ya\eta^k \wedge \sem\Pa\eta^k$ \\[1em]
+$\sem\GNil\eta$ & $\GNil$ \\
+$\sem{\GCons \Ga \zx \ta}\eta$ & $\GCons {\sem\Ga\eta} \zx {\sem\ta\eta}$ \\[2em]
+\end{tabular}
+\end{center}
+\caption{Type interpretation}
+\label{fig:typeInterpretation}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\begin{tabular}{{r@{$\;\;=\;\;$}l}}
+$\JK \Ha \ka$ & $\forall \eta \in \sem\Ha{}\; \sem\ka\eta \neq \varnothing$ \\
+$\JT \Ha \ta \ka$ & $\forall \eta \in \sem\Ha{}\; \sem\ta\eta \in \sem\ka\eta$ \\
+$\JP \Ha \Yao \Yai \Pa$ & $\forall \eta \in \sem\Ha{}\;
+  \forall k\; (\forall j \leq k\; \sem\Yao\eta^j)
+  \wedge (\forall j < k\; \sem\Yai\eta^j) \Rightarrow
+  \sem\Pa\eta^k$ \\
+$\JC \Ha \Yao \Yai \Hap \tap \ta$ & $\forall \eta \in \sem\Ha{}\;
+  \forall k\; (\forall j \leq k\; \sem\Yao\eta^j)
+  \wedge (\forall j < k\; \sem\Yai\eta^j) \Rightarrow
+  \sem{\PCoer \Hap \ta \ta}\eta^k$ \\
+$\JH \Ha \Hap$ & $\forall \eta \in \sem\Ha{}\;
+  \sem\Hap\eta \neq \varnothing$ \\
+$\JG \Ha \Ga$ & $\forall \eta \in \sem\Ha{}\; \forall (\zx : \mathsf{R}) \in \sem\Ga\eta\;
+  \mathsf{R} \in \cCE$ \\
+$\jterm \Ha \Ga \za \ta$ & $\forall \eta \in \sem\Ha{}\;
+  \za \in \EJudg {\sem\Ga\eta} {\sem\ta\eta}$ \\
+\end{tabular}
+\end{center}
+\caption{Judgment interpretation}
+\label{fig:judgInterpretation}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\begin{tabular}{r@{$\;\;\mapsto\;\;$}l}
+$\jrec \tva \ta \rec$ & nothing \\
+$\jeq \ta \tb$ & nothing \\
+$\JK \Ha \ka$ & if $\Jwf \HNil \Ha$ then $\Jwf \Ha \ka$ \\
+$\JT \Ha \ta \ka$ & if $\Jwf \HNil \Ha$ then $\Jwf \Ha \ka$ \\
+$\JP \Ha \Yao \Yai \Pa$ &
+  if $\Jwf \HNil \Ha$, $\Jwf \Ha \Yao$, and $\Jwf \Ha \Yai$ then $\Jwf \Ha \Pa$ \\
+$\JC \Ha \Yao \Yai \Hap \tap \ta$ &
+  if $\Jwf \HNil \Ha$, $\Jwf \Ha \Yao$, and $\Jwf \Ha \Yai$ then \\
+  & $\JH \Ha \Hap$ and
+  if $\JT {\Happ \Ha \Hap} \tap \KStar$ then $\JT \Ha \ta \KStar$ \\
+$\JH \Ha \Hap$ & $\Jwf \Ha \Hap$ \\
+$\JG \Ha \Ga$ & nothing \\
+$\jterm \Ha \Ga \za \ta$ & if $\Jwf \HNil \Ha$ and $\JG \Ha \Ga$ then $\JT \Ha \ta \KStar$ \\
+\end{tabular}
+\end{center}
+\caption{Extraction}
+\label{fig:extraction}
+\end{figure}
+
+\end{document}

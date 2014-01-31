@@ -1,0 +1,274 @@
+% --------------------------------------------------------------------
+% common helpers
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{a4wide}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{mathpartir}
+\usepackage{graphicx}
+
+\definecolor{colorS}{rgb}{.7,.1,.1}
+\definecolor{colorE}{rgb}{.2,.0,1.}
+\definecolor{colorR}{rgb}{.0,.5,.2}
+
+% --------------------------------------------------------------------
+% math helpers
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bbm}
+
+\newcommand{\braces}[1]{\{#1\}}
+\newcommand{\set}[1]{\braces{#1}}
+
+% --------------------------------------------------------------------
+% syntax definitions
+
+\RequirePackage{array}
+\newcolumntype{L}{>{$}l<{$}}
+\newcolumntype{R}{>{$}r<{$}}
+\newcolumntype{C}{>{$}c<{$}}
+\newcolumntype{~}{@{\extracolsep{\fill}}}
+\newcolumntype{:}{@{\extracolsep{0em}}}
+\newcolumntype{;}{@{\;}}
+\newcolumntype{-}{@{\quad}}
+\newcolumntype{.}{@{}}
+
+\def \h@branches #1{\let \branch@sep \empty\let \branch \hbranch #1}
+
+\newenvironment{grammar}
+    {\def \arraystretch {1.2}%
+     \begin{tabular*}{\linewidth}{.C~R:@{\;\;}R@{\;\;}L~>{\;}R.}}
+    {\end{tabular*}\ignorespacesafterend}
+
+\newcommand{\hbranch}[2][]{\branch@sep#2\let \branch@sep \mid}
+\newcommand{\noentry}[2][]{&#2&&&\text{#1}}
+\newcommand{\entry}[3][]{&#2&::=&\h@branches{#3}&\text{#1}}
+\newcommand{\continue}[2][]{&&\mid&\h@branches{#2}&\textit   {#1}}
+
+% --------------------------------------------------------------------
+% Lambda Calculus
+\newcommand{\Lam}[1]{\lambda #1\,}
+\newcommand{\App}[1]{#1\,}
+\newcommand{\Unit}[0]{\langle\rangle}
+\newcommand{\Pair}[2]{\langle #1,#2 \rangle}
+\newcommand{\Fst}[0]{\mathrm{fst}\,}
+\newcommand{\Snd}[0]{\mathrm{snd}\,}
+\newcommand{\Absurd}[1]{#1\langle\varnothing\rangle}
+\newcommand{\Inl}[0]{\mathrm{inl}\,}
+\newcommand{\Inr}[0]{\mathrm{inr}\,}
+\newcommand{\Match}[5]{#1 \langle \Inl #2 \mapsto #3 \mid \Inr #4 \mapsto #5 \rangle}
+\newcommand{\Gen}[0]{\Lambda\,}
+\newcommand{\Inst}[1]{#1\,\bullet}
+
+% L kinds
+\newcommand{\KStar}[0]{\star}
+\newcommand{\KOne}[0]{1}
+\newcommand{\KProd}[2]{#1\times #2}
+\newcommand{\KRes}[3]{\{#1 : #2 \mid #3\}}
+
+% L types
+\newcommand{\TArr}[2]{#1\rightarrow #2}
+\newcommand{\TOne}[0]{1}
+\newcommand{\TProd}[2]{#1\times #2}
+\newcommand{\TVoid}[0]{0}
+\newcommand{\TSum}[2]{#1 + #2}
+\newcommand{\TFor}[2]{\forall(#1 : #2)\,}
+\newcommand{\TPi}[2]{\Pi(#1 : #2)\,}
+\newcommand{\TMu}[1]{\mu #1\,}
+\newcommand{\TTop}[0]{\top}
+\newcommand{\TBot}[0]{\bot}
+
+\newcommand{\TUnit}[0]{\langle\rangle}
+\newcommand{\TPair}[2]{\langle #1, #2 \rangle}
+\newcommand{\TFst}[0]{\mathrm{fst}\,}
+\newcommand{\TSnd}[0]{\mathrm{snd}\,}
+
+% L props
+\newcommand{\PCoer}[2]{(#1 \vdash #2) \Tr}
+\newcommand{\PTrue}[0]{\top}
+\newcommand{\PAnd}[1]{#1 \wedge}
+\newcommand{\PExi}[0]{\exists\,}
+\newcommand{\PFor}[2]{\forall (#1 : #2)\,}
+
+% L tenvs
+\newcommand{\HNil}[0]{\varnothing}
+\newcommand{\HCons}[3]{#1, (#2 : #3)}
+
+% L penvs
+\newcommand{\YNil}[0]{\varnothing}
+\newcommand{\YCons}[3]{#1, (#2 : #3)}
+
+% L aenvs
+\newcommand{\GNil}[0]{\varnothing}
+\newcommand{\GCons}[3]{#1, (#2 : #3)}
+
+% L explicit
+\newcommand{\efont}[0]{\mathrm}
+\newcommand{\kexi}[1]{[#1]}
+\newcommand{\teq}[1]{#1 :}
+\newcommand{\tPack}[4]{\{#1 = #2 \mid #3 : #4\}}
+\newcommand{\tUnpack}[0]{!}
+\newcommand{\peq}[1]{#1 :}
+\newcommand{\pTrue}[0]{\langle\rangle}
+\newcommand{\pPair}[2]{\langle #1, #2\rangle}
+\newcommand{\pFst}[0]{\efont{fst}\,}
+\newcommand{\pSnd}[0]{\efont{snd}\,}
+\newcommand{\pExi}[0]{\exists\,}
+\newcommand{\pLam}[2]{\lambda (#1 : #2)\,}
+\newcommand{\pApp}[1]{#1\,}
+\newcommand{\pRes}[0]{\&}
+\newcommand{\pFix}[2]{\mu (#1 : #2)\,}
+\newcommand{\pCoer}[2]{#1[#2]}
+\newcommand{\gRefl}[0]{\langle\rangle}
+\newcommand{\gTrans}[1]{#1 ;}
+\newcommand{\gWeak}[0]{!}
+\newcommand{\gArr}[2]{#1[#2] \rightarrow}
+\newcommand{\gProd}[1]{#1 \times}
+\newcommand{\gSum}[1]{#1 +}
+\newcommand{\gPi}[6]{\Pi [#1] (#2 : #3) [#4, #5 = #6]}
+\newcommand{\gGen}[2]{\Lambda (#1 : #2)}
+\newcommand{\gInst}[1]{[#1]}
+\newcommand{\gUnfold}[0]{\efont{unfold}}
+\newcommand{\gFold}[1]{\efont{fold}\,#1\,\efont{in}\,}
+\newcommand{\gTop}[0]{\top}
+\newcommand{\gBot}[0]{\bot}
+\newcommand{\eLam}[2]{\lambda (#1 : #2)\,}
+\newcommand{\eAbsurd}[2]{#1\langle #2\rangle}
+\newcommand{\eInl}[1]{\efont{inl}\,#1\,}
+\newcommand{\eInr}[1]{\efont{inr}\,#1\,}
+\newcommand{\eMatch}[5]{#1 \langle \Inl #2 \mapsto #3 \mid \Inr #4 \mapsto #5 \rangle}
+\newcommand{\eGen}[2]{\Lambda (#1 : #2)\,}
+\newcommand{\eInst}[1]{#1\,}
+\newcommand{\eCoer}[1]{#1\,}
+
+% L directions
+\newcommand{\Tr}[0]{\mathrel\triangleright}
+
+% L judgments
+\newcommand{\jrec}[2]{#1 \mapsto #2 :}
+\newcommand{\jeq}[1]{#1 =}
+\newcommand{\JK}[1]{#1 \vdash}
+\newcommand{\JT}[2]{#1 \vdash #2 :}
+\newcommand{\JP}[3]{#1 ; #2 ; #3 \vdash}
+\newcommand{\JC}[5]{#1 ; #2 ; #3 \vdash^\star \PCoer{#4}{#5}}
+\newcommand{\JH}[1]{#1 \vdash}
+\newcommand{\Jwf}[1]{#1 \Vdash}
+\newcommand{\JG}[1]{#1 \vdash}
+\newcommand{\jterm}[3]{#1 ; #2 \vdash #3 :}
+\newcommand{\WF}[0]{\mathrm{WF}}
+\newcommand{\NE}[0]{\mathrm{NE}}
+\newcommand{\rec}[0]{\mathrm{rec}}
+\newcommand{\EJudg}[1]{#1 \models}
+
+% Misc
+\newcommand{\Ctx}[2]{#1[#2]}
+\newcommand{\Subst}[3]{#1[#2\leftarrow #3]}
+\newcommand{\Happ}[1]{#1,}
+\newcommand{\Yapp}[1]{#1,}
+\newcommand{\Ex}[1]{#1 \Rightarrow}
+
+% Operators
+\newcommand{\dom}[1]{\mathop{\mathsf{dom}}(#1)}
+\newcommand{\fv}[1]{\mathsf{fv}(#1)}
+\newcommand{\sem}[2]{|#1|_{#2}}
+
+\newcommand{\modL}[1]{[\mathrm{#1}]}
+\ifcolor
+\newcommand{\modS}[0]{\textcolor{colorS}}
+\newcommand{\modE}[0]{\textcolor{colorE}}
+\newcommand{\modR}[0]{\textcolor{colorR}}
+\else
+\newcommand{\modS}[0]{\modL{S}}
+\newcommand{\modE}[0]{\modL{E}}
+\newcommand{\modR}[0]{\modL{R}}
+\fi
+
+% Meta variables
+\newcommand{\Ga}[0]{\Gamma}
+\newcommand{\Gap}[0]{\Ga'}
+\newcommand{\Gai}[0]{\Ga_1}
+\newcommand{\Gaii}[0]{\Ga_2}
+\newcommand{\Ha}[0]{\Sigma}
+\newcommand{\Hap}[0]{\Ha'}
+\newcommand{\Hai}[0]{\Ha_1}
+\newcommand{\Haii}[0]{\Ha_2}
+\newcommand{\Haip}[0]{\Ha_1'}
+\newcommand{\Haiip}[0]{\Ha_2'}
+\newcommand{\Ya}[0]{\Theta}
+\newcommand{\Yap}[0]{\Ya'}
+\newcommand{\Yao}[0]{\Ya_0}
+\newcommand{\Yai}[0]{\Ya_1}
+\newcommand{\Yaop}[0]{\Ya_0'}
+\newcommand{\Yaip}[0]{\Ya_1'}
+\newcommand{\Yaii}[0]{\Ya_2}
+\newcommand{\Ka}[0]{\efont{K}}
+\newcommand{\Kai}[0]{\Ka_1}
+\newcommand{\Kaii}[0]{\Ka_2}
+\newcommand{\Ma}[0]{\efont{M}}
+\newcommand{\Mai}[0]{\Ma_1}
+\newcommand{\Maii}[0]{\Ma_2}
+\newcommand{\Mb}[0]{\efont{N}}
+\newcommand{\Mbi}[0]{\Mb_1}
+\newcommand{\Mbii}[0]{\Mb_2}
+\newcommand{\Pa}[0]{\mathrm{P}}
+\newcommand{\Pap}[0]{\Pa'}
+\newcommand{\Pai}[0]{\Pa_1}
+\newcommand{\Paii}[0]{\Pa_2}
+\newcommand{\Qa}[0]{\efont{Q}}
+\newcommand{\Qai}[0]{\Qa_1}
+\newcommand{\Qaii}[0]{\Qa_2}
+\newcommand{\Ta}[0]{\efont{T}}
+\newcommand{\Tai}[0]{\Ta_1}
+\newcommand{\Taii}[0]{\Ta_2}
+\newcommand{\Tb}[0]{\efont{S}}
+\newcommand{\za}[0]{a}
+\newcommand{\zai}[0]{\za_1}
+\newcommand{\zaii}[0]{\za_2}
+\newcommand{\zaj}[0]{\za_i}
+\newcommand{\zap}[0]{\za'}
+\newcommand{\zb}[0]{b}
+\newcommand{\zbi}[0]{\zb_1}
+\newcommand{\zbii}[0]{\zb_2}
+\newcommand{\zbj}[0]{\zb_i}
+\newcommand{\zbp}[0]{\zb'}
+\newcommand{\zc}[0]{c}
+\newcommand{\zci}[0]{\zc_1}
+\newcommand{\zcii}[0]{\zc_2}
+\newcommand{\ba}[0]{\efont{B}}
+\newcommand{\ga}[0]{\efont{G}}
+\newcommand{\gai}[0]{\ga_1}
+\newcommand{\gaii}[0]{\ga_2}
+\newcommand{\ha}[0]{\efont{H}}
+\newcommand{\pa}[0]{\efont{p}}
+\newcommand{\pai}[0]{\pa_1}
+\newcommand{\paii}[0]{\pa_2}
+\newcommand{\zx}[0]{x}
+\newcommand{\zxi}[0]{\zx_1}
+\newcommand{\zxii}[0]{\zx_2}
+\newcommand{\zxj}[0]{\zx_i}
+\newcommand{\tva}[0]{\alpha}
+\newcommand{\tvap}[0]{\tva'}
+\newcommand{\tvb}[0]{\beta}
+\newcommand{\ka}[0]{\kappa}
+\newcommand{\kap}[0]{\ka'}
+\newcommand{\kai}[0]{\ka_1}
+\newcommand{\kaii}[0]{\ka_2}
+\newcommand{\ta}[0]{\tau}
+\newcommand{\tap}[0]{\ta'}
+\newcommand{\tapp}[0]{\tap'}
+\newcommand{\tai}[0]{\ta_1}
+\newcommand{\taip}[0]{\tai'}
+\newcommand{\taii}[0]{\ta_2}
+\newcommand{\taiip}[0]{\taii'}
+\newcommand{\taiii}[0]{\ta_3}
+\newcommand{\tb}[0]{\sigma}
+\newcommand{\tbp}[0]{\tb'}
+\newcommand{\tbi}[0]{\tb_1}
+\newcommand{\tbip}[0]{\tbi'}
+\newcommand{\tbii}[0]{\tb_2}
+\newcommand{\tbiip}[0]{\tbii'}
+\newcommand{\etap}[0]{\eta'}
+\newcommand{\cCE}[0]{\mathbbm{T}}

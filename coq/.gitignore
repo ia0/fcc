@@ -1,0 +1,5 @@
+.depend
+Makefile.coq
+*.v.d
+*.vo
+*.glob

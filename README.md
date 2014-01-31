@@ -1,4 +1,8 @@
-fcc
+Coq formalization of System Fcc
 ===
 
-Coq formalization of System Fcc (coercion framework)
+System Fcc is a kernel type system designed following a unified
+approach with coercions.
+
+It is documented in my PhD: http://phd.ia0.fr/
+
