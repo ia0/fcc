@@ -9,7 +9,7 @@ Require Import list.
 (** * System Fcc (common part)
 
 This file formalizes all definitions and typing rules of System Fcc
-that are not related terms. The only term related part of the system
+that are not related to terms. The only term related part of the system
 is the term judgment, which is described in [Ltypesystem_v] for its
 lambda version and [Ltypesystem_v] for its indexed (or fuel) version.
 *)
@@ -20,7 +20,7 @@ The formalization of the type system syntax differs from its
 definition in the manuscript in the sense that the formalization
 defines the syntax in two steps. We first define a unique inductive
 for all syntactical objects, and then define a judgment to classify
-these objects in there syntactical class of the manuscript.
+these objects in the syntactical classses of the manuscript.
 *)
 
 (** *** Objects
@@ -689,7 +689,7 @@ state when a premise is required for soundness (and thus redundant)
 with the letter [S], and we will also state when a premise is not
 needed for soundness but present in the manuscript with the letter [E]
 (like extraction). Ideally, we would parametrize the formalization
-whether we are in the [E] or [S] version of the type system, and show
+over whether we are in the [E] or [S] version of the type system, and show
 that the [E] version implies the [S] version.
 
 Soundness alse needs some objects to be in the correct syntactical
