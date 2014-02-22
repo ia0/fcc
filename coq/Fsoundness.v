@@ -287,7 +287,6 @@ Lemma Ynth_prop :
   exists fp, semobj p (SProp fp).
 Proof.
 induction 1; intros.
-exists (fun _ _ => True); eauto using semobj.
 dep H; exists fp; auto.
 dep H0.
 destruct (IHYnth fY0 H0_) as [fp0 ?].
@@ -1268,8 +1267,6 @@ Lemma Hnth_mem : forall {H a k}, Hnth H a k ->
   fH nil h -> fk (deln (1 + a) 0 h) (nth a h SUnit).
 Proof.
 induction 1; intros.
-(* 3: *)
-  dep H; dep H0; subst; simpl; destruct n; auto.
 (* 2: *)
   dep H0.
   destruct H2 as [? [? [? [? ?]]]]; subst; simpl.
@@ -1289,8 +1286,6 @@ Lemma Ynth_mem : forall Y n p, Ynth Y n p ->
   fH nil h -> forall k, fY h k -> fp h k.
 Proof.
 induction 1; intros.
-(* 3: *)
-  dep H1; dep H2; exact I.
 (* 2: *)
   dep H1.
   semobjeq p.
@@ -2556,11 +2551,6 @@ Lemma Gnth_type :
   exists ft, semobj t (SType ft) /\ forall h, nth n (fG h) ETop = getstar (ft h).
 Proof.
 induction 1; intros.
-(* 3: *)
-  eexists; split; eauto using semobj.
-  dep H.
-  intros _; simpl.
-  destruct n; auto.
 (* 2: *)
   dep H; exists ft; auto.
 (* 1: *)

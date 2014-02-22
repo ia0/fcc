@@ -1225,8 +1225,6 @@ Lemma Hnth_mem : forall {H a k}, Hnth H a k ->
   fH nil h -> fk (deln (S a) 0 h) (nth a h SUnit).
 Proof.
 induction 1; intros.
-(* 3: *)
-  dep H; dep H0; subst; simpl; destruct n; auto.
 (* 2: *)
   dep H0.
   destruct H2 as [? [? [? [? ?]]]]; subst; simpl.
@@ -2116,11 +2114,6 @@ Lemma Gnth_type :
   exists ft, semobj t (SType ft) /\ forall h, nth n (fG h) ETop = getstar (ft h).
 Proof.
 induction 1; intros.
-(* 3: *)
-  eexists; split; eauto using semobj.
-  dep H.
-  intros _; simpl.
-  destruct n; auto.
 (* 2: *)
   dep H; exists ft; auto.
 (* 1: *)

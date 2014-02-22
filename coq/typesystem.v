@@ -157,7 +157,6 @@ environment [H] with [Hnth H n k]. This function is defined as a
 relation.
 *)
 Inductive Hnth : tenv -> nat -> kind -> Prop :=
-| Hnth0 : forall n, Hnth HNil n KOne
 | Hnth1 : forall H k, Hnth (HCons H k) 0 k
 | Hnth2 : forall n H k k', Hnth H n k -> Hnth (HCons H k') (1 + n) k
 .
@@ -186,7 +185,6 @@ Qed.
 with [Ynth Y n p].
 *)
 Inductive Ynth : penv -> nat -> prop -> Prop :=
-| Ynth0 : forall n, Ynth YNil n PTrue
 | Ynth1 : forall Y p, Ynth (YCons Y p) 0 p
 | Ynth2 : forall n Y p p', Ynth Y n p -> Ynth (YCons Y p') (1 + n) p
 .
@@ -204,7 +202,6 @@ Inductive Yapp : penv -> penv -> penv -> Prop :=
 environment [G] with [Gnth G n t].
 *)
 Inductive Gnth : aenv -> nat -> type -> Prop :=
-| Gnth0 : forall n, Gnth GNil n TTop
 | Gnth1 : forall G t, Gnth (GCons G t) 0 t
 | Gnth2 : forall n G t t', Gnth G n t -> Gnth (GCons G t') (1 + n) t
 .

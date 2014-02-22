@@ -41,7 +41,6 @@ Qed.
 Lemma Hnth_cobj : forall {H a k}, Hnth H a k -> cobj H CTEnv -> cobj k CKind.
 Proof.
 induction 1; simpl; intros.
-constructor.
 inversion H0; clear H0; subst; assumption.
 inversion H1; clear H1; subst; auto.
 Qed.
@@ -49,7 +48,6 @@ Qed.
 Lemma Ynth_cobj : forall {Y n p}, Ynth Y n p -> cobj Y CPEnv -> cobj p CProp.
 Proof.
 induction 1; simpl; intros.
-constructor.
 inversion H; clear H; subst; assumption.
 inversion H0; clear H0; subst; auto.
 Qed.
@@ -221,13 +219,6 @@ induction H; subst; [reflexivity|].
 rewrite (IHHapp eq_refl); reflexivity.
 Qed.
 
-Lemma Hnth_Hlength_KOne : forall H n, cobj H CTEnv -> Hnth H (Hlength H + n) KOne.
-Proof.
-intros H n HH.
-remember CTEnv as c.
-induction HH; try inversion Heqc; clear Heqc; simpl; auto using Hnth.
-Qed.
-
 Lemma Hnth_Hlength_exact : forall H1 k H2 HkH, Happ (HCons H1 k) H2 HkH ->
   Hnth HkH (Hlength H2) k.
 Proof.
@@ -256,11 +247,6 @@ Lemma Hnth_lift : forall {a H1H3 k}, Hnth H1H3 a k ->
   Hnth H1H2H3 (Hlength H2 + a) k.
 Proof.
 induction 1; simpl; intros.
-- inversion H0; clear H0; subst; simpl in *.
-  inversion H4; clear H4; subst.
-  rewrite (Happ_HNil_eq H) in *; clear H H2.
-  rename H1H2H3 into H.
-  apply Hnth_Hlength_KOne; auto.
 - rewrite plus_0_r.
   inversion H4; clear H4; subst; simpl in *; [|exfalso; omega].
   inversion H5; clear H5; subst.
@@ -287,7 +273,6 @@ Lemma Hnth_Happ_lift : forall H1H3 a k, Hnth H1H3 a k ->
   Hnth H1H2H3 a (lift (Hlength H2) (Hlength H3 - (1 + a)) k).
 Proof.
 induction 1; simpl; intros.
-inversion H0; clear H0; subst; simpl in *; exfalso; omega.
 { inversion H4; clear H4; subst; simpl in *; try (exfalso; omega).
   rewrite <- minus_n_O.
   rewrite plus_0_r in H6.
@@ -308,7 +293,6 @@ Lemma Hnth_Happ_subst : forall H a k, Hnth H a k ->
   Hnth ab a (subst s (Hlength b - (1 + a)) k).
 Proof.
 induction 1; simpl; intros.
-inversion H0; clear H0; subst; simpl in *; exfalso; omega.
 { inversion H1; clear H1; subst; simpl in *; try (exfalso; omega).
   rewrite <- minus_n_O.
   rewrite plus_0_r in H2.

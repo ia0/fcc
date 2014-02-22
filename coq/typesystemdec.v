@@ -119,13 +119,11 @@ Definition Hnth_dec : tenv -> nat -> option kind := fix f H a :=
     | O =>
       match H with
         | HCons _ k => Some k
-        | HNil => Some KOne
         | _ => None
       end
     | S a =>
       match H with
         | HCons H _ => f H a
-        | HNil => Some KOne
         | _ => None
       end
   end.
@@ -143,7 +141,6 @@ intros; split; intros Ha.
   end; auto using Hnth.
 (* <- *)
   induction Ha; simpl; auto.
-  destruct n; reflexivity.
 Qed.
 
 Definition get_Hnth : forall H a, option (sigT (Hnth H a)).
@@ -161,13 +158,11 @@ Definition Gnth_dec : aenv -> nat -> option type := fix f G x :=
     | O =>
       match G with
         | GCons _ t => Some t
-        | GNil => Some TTop
         | _ => None
       end
     | S x =>
       match G with
         | GCons G _ => f G x
-        | GNil => Some TTop
         | _ => None
       end
   end.
@@ -185,7 +180,6 @@ intros; split; intros Hx.
   end; auto using Gnth.
 (* <- *)
   induction Hx; simpl; auto.
-  destruct n; reflexivity.
 Qed.
 
 Definition get_Gnth : forall G x, option (sigT (Gnth G x)).
