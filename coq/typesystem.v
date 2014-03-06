@@ -965,7 +965,8 @@ Inductive jobj v : tenv -> judg -> Prop :=
   jobj v H (Jwf (PAnd p1 p2) CProp)
 | WPCoer : forall H H' HH' t' t,
   Happ H H' HH' ->
-  jobj v H (JH H') ->
+  (* jobj v H (JH H') -> *)
+  jobj v H (Jwf H' CTEnv) ->
   jobj v HH' (JT t' KStar) ->
   jobj v H (JT t KStar) ->
   jobj v H (Jwf (PCoer H' t' t) CProp)

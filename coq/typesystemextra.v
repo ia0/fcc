@@ -1813,10 +1813,15 @@ end; unfold extrajudg in *; crush_extra.
   eapply JTUnpack; eauto.
 (* 16: JPFix *) assumption.
 (* 15: JPCoer *)
-  destruct H4 as [? Ht].
-  apply WPCoer with HH'; auto.
-  apply (Ht HH'); auto.
-(* 14: JCProp *) auto.
+  match goal with Hyp: jobj v H (JH H') /\ _ |- _ => destruct Hyp as [jH' Ht] end.
+  { apply WPCoer with HH'.
+    - auto.
+    - apply (JH_extra mEv jH').
+    - auto.
+    - apply (Ht HH'); auto. }
+(* 14: JCProp *)
+  split; auto.
+  intros ? Ha. inversion Ha; clear Ha; subst. auto.
 (* 13: JCRefl *)
   split; auto using JHNil.
   intros ? Ha; inversion Ha; clear Ha; subst; auto.
@@ -2610,4 +2615,3 @@ end.
   destruct eC as [jH' _].
   apply JCoer with H' HH' t; auto.
 Qed.
-
