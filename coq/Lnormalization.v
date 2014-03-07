@@ -1729,7 +1729,7 @@ induction 1; unfold semjudg in *; try exact I.
   exists fH. eexists.
   repeat split; eauto using semobj.
 (* 18: JCProp *)
-  destruct IHjobj as [? [? [? [? Cp]]]].
+  destruct IHjobj1 as [? [? [? [? Cp]]]].
   semobj_cstr.
   semobjeq_rename H fH sH.
   semobjeq_rename H' fH' sH'.

@@ -860,16 +860,16 @@ induction 3; simpl in *; intros.
   apply WPAnd; auto.
 (* 7: WPCoer *)
   destruct (jobj_class H3_) as [_ cH'].
-  destruct (@Happ_exists (lift (Hlength H2) (Hlength H5) H')) with (a := H1H2H3) as [x Hx];
+  destruct (@Happ_exists (lift (Hlength H2) (Hlength H7) H')) with (a := H1H2H3) as [x Hx];
     auto using cobj_lift.
-  destruct (@Happ_exists H') with (a := H5) as [w Hw]; auto.
+  destruct (@Happ_exists H') with (a := H7) as [w Hw]; auto.
   pose proof (Hlength_Happ Hw) as Heqw.
-  replace (Hlength H5 + Hlength H') with (Hlength H' + Hlength H5) in Heqw by omega.
+  replace (Hlength H7 + Hlength H') with (Hlength H' + Hlength H7) in Heqw by omega.
   assert (Happ H1 w HH').
-  { apply Happ_assoc_right with (ab:=H3) (b:=H5) (c:=H'); auto. }
+  { apply Happ_assoc_right with (ab:=H3) (b:=H7) (c:=H'); auto. }
   assert (Happ H1H2 (lift (Hlength H2) 0 w) x).
-  { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H5)
-          (c:=lift (Hlength H2) (Hlength H5) H'); auto using cobj_lift.
+  { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H7)
+          (c:=lift (Hlength H2) (Hlength H7) H'); auto using cobj_lift.
     pose proof (Happ_lift Hw (Hlength H2) 0) as Hwl.
     rewrite plus_0_r in Hwl; exact Hwl. }
   rewrite <- Heqw.
@@ -1444,7 +1444,7 @@ induction 1; simpl in *; intros.
 (* 8: WPAnd *)
   apply WPAnd; auto.
 (* 7: WPCoer *)
-  destruct (jobj_class H1) as [_ cH'].
+  destruct (jobj_class H3) as [_ cH'].
   destruct (@Happ_exists (subst s (Hlength b) H')) with (a := ab) as [x Hx];
     auto using cobj_subst.
   destruct (@Happ_exists H') with (a := b) as [w Hw]; auto.
@@ -1814,14 +1814,11 @@ end; unfold extrajudg in *; crush_extra.
 (* 16: JPFix *) assumption.
 (* 15: JPCoer *)
   match goal with Hyp: jobj v H (JH H') /\ _ |- _ => destruct Hyp as [jH' Ht] end.
-  { apply WPCoer with HH'.
-    - auto.
+  { apply WPCoer with HH'; auto.
     - apply (JH_extra mEv jH').
-    - auto.
     - apply (Ht HH'); auto. }
 (* 14: JCProp *)
-  split; auto.
-  intros ? Ha. inversion Ha; clear Ha; subst. auto.
+  split; auto using JHNil.
 (* 13: JCRefl *)
   split; auto using JHNil.
   intros ? Ha; inversion Ha; clear Ha; subst; auto.
@@ -2298,9 +2295,8 @@ eapply JPRes; eauto.
   eapply JPCoer; eauto. }
 { (* JCProp *)
   destruct Hh as [wY0 wY1].
-  pose proof ((fun x => jobj_extra x IHHj) I Hwf wY0 wY1) as wC.
+  pose proof ((fun x => jobj_extra x IHHj1) I Hwf wY0 wY1) as wC.
   inversion wC; clear wC; subst.
-  pose proof ((fun x => JH_extra x H6) I).
   split; auto.
   intros [Htmp [Ha jt']]; rewrite (Happ_eq Ha H4) in *; clear Htmp Ha.
   eapply JCProp; eauto. }
@@ -2503,10 +2499,9 @@ eapply WPAnd; eauto.
   rename H0 into aHH'.
   destruct (jobj_class Hj1) as [_ cH'].
   assert (cobj HH' CTEnv) as cHH'. { apply (Happ_cobj aHH'); auto. }
-  pose proof ((fun x => JH_extra x IHHj1) I).
   assert_clear IHHj2 wHH'. { apply (Happ_Jwf_0 (b, vF) aHH' cHH'); auto. }
   clear_True.
-  apply WPCoer with HH'; auto. }
+  apply WPCoer with HH'; tauto.  }
 eapply WPExi; eauto.
 { (* WPFor *)
   assert_clear IHHj2 wHk. { apply WHCons with H; auto using Happ_HNil. }

@@ -829,6 +829,7 @@ Inductive jobj v : tenv -> judg -> Prop :=
 (* props (coercions) *)
 | JCProp : forall H Y0 Y1 H' t' t,
   jobj v H (JP Y0 Y1 (PCoer H' t' t)) ->
+  jobj v H (JH H') ->
   jobj v H (JC Y0 Y1 H' t' t)
 | JCRefl : forall H Y0 Y1 t,
   cobj H CTEnv ->
@@ -965,7 +966,7 @@ Inductive jobj v : tenv -> judg -> Prop :=
   jobj v H (Jwf (PAnd p1 p2) CProp)
 | WPCoer : forall H H' HH' t' t,
   Happ H H' HH' ->
-  (* jobj v H (JH H') -> *)
+  (False -> jobj v H (JH H')) ->
   jobj v H (Jwf H' CTEnv) ->
   jobj v HH' (JT t' KStar) ->
   jobj v H (JT t KStar) ->
