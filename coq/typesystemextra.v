@@ -540,6 +540,7 @@ induction 3; simpl in *; intros.
   apply JTUnit.
   apply (Happ_cobj H8); auto using cobj_lift.
 (* 48: JTPair *) apply JTPair; auto.
+(* 48bis: JTPairEta *) { apply JTPairEta; auto. }
 (* 47: JTFst *) eapply JTFst; eauto.
 (* 46: JTSnd *) eapply JTSnd; eauto.
 (* 45: JTPack *)
@@ -1133,6 +1134,7 @@ induction 1; simpl in *; intros.
 (* 49: JTUnit *)
   apply JTUnit; eauto using jobj_subst_aux1.
 (* 48: JTPair *) apply JTPair; auto.
+(* 48bis: JTPairEta *) { apply JTPairEta; auto. }
 (* 47: JTFst *) eapply JTFst; eauto.
 (* 46: JTSnd *) eapply JTSnd; eauto.
 (* 45: JTPack *)
@@ -1588,11 +1590,12 @@ intros v H t s k mEv Hts.
 remember (JT (TArr t s) k) as j.
 generalize t s k Heqj; clear t s k Heqj.
 induction Hts; intros t0 s0 k0 Heqj krc; inversion Heqj; clear Heqj; subst; auto.
-{ apply IHHts with k; auto.
-  apply KRes_ctx_jeq with k0; auto using EQsym. }
-{ inversion krc; clear krc; subst.
-  apply IHHts1 with k; auto. }
-apply IHHts with (KRes k0 p); auto using KRes_ctx.
+- apply IHHts with k; auto.
+  apply KRes_ctx_jeq with k0; auto using EQsym.
+- inversion krc; clear krc; subst.
+- inversion krc; clear krc; subst. 
+  apply IHHts1 with k; auto.
+- apply IHHts with (KRes k0 p); auto using KRes_ctx.
 Qed.
 
 Lemma jobj_TArr_inversion : forall {v H t s}, mE v -> jobj v H (JT (TArr t s) KStar) ->
@@ -1606,11 +1609,12 @@ intros v H t s k mEv Hts.
 remember (JT (TProd t s) k) as j.
 generalize t s k Heqj; clear t s k Heqj.
 induction Hts; intros t0 s0 k0 Heqj krc; inversion Heqj; clear Heqj; subst; auto.
-{ apply IHHts with k; auto.
-  apply KRes_ctx_jeq with k0; auto using EQsym. }
-{ inversion krc; clear krc; subst.
-  apply IHHts1 with k; auto. }
-apply IHHts with (KRes k0 p); auto using KRes_ctx.
+- apply IHHts with k; auto.
+  apply KRes_ctx_jeq with k0; auto using EQsym.
+- inversion krc; clear krc; subst.
+- inversion krc; clear krc; subst.
+  apply IHHts1 with k; auto.
+- apply IHHts with (KRes k0 p); auto using KRes_ctx.
 Qed.
 
 Lemma jobj_TProd_inversion : forall {v H t s}, mE v -> jobj v H (JT (TProd t s) KStar) ->
@@ -1624,11 +1628,12 @@ intros v H t s k mEv Hts.
 remember (JT (TSum t s) k) as j.
 generalize t s k Heqj; clear t s k Heqj.
 induction Hts; intros t0 s0 k0 Heqj krc; inversion Heqj; clear Heqj; subst; auto.
-{ apply IHHts with k; auto.
-  apply KRes_ctx_jeq with k0; auto using EQsym. }
-{ inversion krc; clear krc; subst.
-  apply IHHts1 with k; auto. }
-apply IHHts with (KRes k0 p); auto using KRes_ctx.
+- apply IHHts with k; auto.
+  apply KRes_ctx_jeq with k0; auto using EQsym.
+- inversion krc; clear krc; subst.
+- inversion krc; clear krc; subst.
+  apply IHHts1 with k; auto.
+- apply IHHts with (KRes k0 p); auto using KRes_ctx.
 Qed.
 
 Lemma jobj_TSum_inversion : forall {v H t s}, mE v -> jobj v H (JT (TSum t s) KStar) ->
@@ -1642,11 +1647,12 @@ intros v H k' t k mEv Ht.
 remember (JT (TFor k' t) k) as j.
 generalize k' t k Heqj; clear k' t k Heqj.
 induction Ht; intros k'0 t0 k0 Heqj krc; inversion Heqj; clear Heqj; subst; auto.
-{ apply IHHt with k; auto.
-  apply KRes_ctx_jeq with k0; auto using EQsym. }
-{ inversion krc; clear krc; subst.
-  apply IHHt1 with k; auto. }
-apply IHHt with (KRes k0 p); auto using KRes_ctx.
+- apply IHHt with k; auto.
+  apply KRes_ctx_jeq with k0; auto using EQsym.
+- inversion krc; clear krc; subst.
+- inversion krc; clear krc; subst.
+  apply IHHt1 with k; auto.
+- apply IHHt with (KRes k0 p); auto using KRes_ctx.
 Qed.
 
 Lemma jobj_TFor_inversion : forall {v H k t}, mE v -> jobj v H (JT (TFor k t) KStar) ->
@@ -1660,11 +1666,12 @@ intros v H t k mEv Ht.
 remember (JT (TMu t) k) as j.
 generalize t k Heqj; clear t k Heqj.
 induction Ht; intros t0 k0 Heqj krc; inversion Heqj; clear Heqj; subst; auto.
-{ apply IHHt with k; auto.
-  apply KRes_ctx_jeq with k0; auto using EQsym. }
-{ inversion krc; clear krc; subst.
-  apply IHHt1 with k; auto. }
-apply IHHt with (KRes k0 p); auto using KRes_ctx.
+- apply IHHt with k; auto.
+  apply KRes_ctx_jeq with k0; auto using EQsym.
+- inversion krc; clear krc; subst.
+- inversion krc; clear krc; subst.
+  apply IHHt1 with k; auto.
+- apply IHHt with (KRes k0 p); auto using KRes_ctx.
 Qed.
 
 Lemma jobj_TMu_inversion : forall {v H t}, mE v -> jobj v H (JT (TMu t) KStar) ->
@@ -1678,11 +1685,12 @@ intros v H k' t k mEv Ht.
 remember (JT (TPi k' t) k) as j.
 generalize k' t k Heqj; clear k' t k Heqj.
 induction Ht; intros k'0 t0 k0 Heqj krc; inversion Heqj; clear Heqj; subst; auto.
-{ apply IHHt with k; auto.
-  apply KRes_ctx_jeq with k0; auto using EQsym. }
-{ inversion krc; clear krc; subst.
-  apply IHHt1 with k; auto. }
-apply IHHt with (KRes k0 p); auto using KRes_ctx.
+- apply IHHt with k; auto.
+  apply KRes_ctx_jeq with k0; auto using EQsym.
+- inversion krc; clear krc; subst.
+- inversion krc; clear krc; subst.
+  apply IHHt1 with k; auto.
+- apply IHHt with (KRes k0 p); auto using KRes_ctx.
 Qed.
 
 Lemma jobj_TPi_inversion : forall {v H k t}, mE v -> jobj v H (JT (TPi k t) KStar) ->
@@ -1787,6 +1795,7 @@ end; unfold extrajudg in *; crush_extra.
 (* 33: JTTop *) apply WKStar; cobj_extra.
 (* 32: JTUnit *) apply WKOne; cobj_extra.
 (* 31: JTPair *) apply WKProd; assumption.
+(* 31bis: JTPairEta *) apply WKProd; assumption.
 (* 30: JTFst *) assumption.
 (* 29: JTSnd *) assumption.
 (* 28: JTPack *) apply WKRes; assumption.
@@ -2007,6 +2016,7 @@ eapply JTBot; eauto.
 eapply JTTop; eauto.
 eapply JTUnit; eauto.
 eapply JTPair; eauto.
+eapply JTPairEta; eauto.
 eapply JTFst; eauto.
 eapply JTSnd; eauto.
 eapply JTPack; eauto; intro Hf; exfalso; exact Hf.
@@ -2101,6 +2111,7 @@ eapply JTBot; eauto.
 eapply JTTop; eauto.
 eapply JTUnit; eauto.
 eapply JTPair; eauto.
+eapply JTPairEta; eauto.
 eapply JTFst; eauto.
 eapply JTSnd; eauto.
 eapply JTPack; eauto.
@@ -2257,6 +2268,7 @@ eapply JTBot; eauto.
 eapply JTTop; eauto.
 eapply JTUnit; eauto.
 eapply JTPair; eauto.
+eapply JTPairEta; eauto.
 eapply JTFst; eauto.
 eapply JTSnd; eauto.
 { eapply JTPack; eauto.
