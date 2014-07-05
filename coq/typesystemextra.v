@@ -1776,6 +1776,126 @@ Proof.
   eauto.
 Qed.
 
+Inductive jt_base (v : Mode) : tenv -> type -> kind -> Prop :=
+| JTBVar : forall H a k,
+  cobj H CTEnv ->
+  Hnth H a k ->
+  jt_base v H (TVar a) (lift (1 + a) 0 k)
+| JTBOne : forall H,
+  cobj H CTEnv ->
+  jt_base v H TOne KStar
+| JTBVoid : forall H,
+  cobj H CTEnv ->
+  jt_base v H TVoid KStar
+| JTBBot : forall H,
+  cobj H CTEnv ->
+  jt_base v H TBot KStar
+| JTBTop : forall H,
+  cobj H CTEnv ->
+  jt_base v H TTop KStar
+| JTBUnit : forall H,
+  cobj H CTEnv ->
+  jt_base v H TUnit KOne
+.
+
+Inductive jt_destructor (v : Mode) : tenv -> type -> kind -> Prop :=
+| JTDFst : forall H t k1 k2,
+  jt_destructor v H t (KProd k1 k2) ->
+  jt_destructor v H (TFst t) k1
+| JTDSnd : forall H t k1 k2,
+  jt_destructor v H t (KProd k1 k2) ->
+  jt_destructor v H (TSnd t) k2
+| JTDUnpack : forall H t k p,
+  jt_destructor v H t (KRes k p) ->
+  jt_destructor v H t k
+| JTDBase : forall H t k k',
+              jt_base v H t k ->
+              (mE v -> jobj v H (Jwf k' CKind)) ->
+              keq_algo k k' ->
+              jt_destructor v H t k'
+.
+
+Inductive jt_constructor (v : Mode) : tenv -> type -> kind -> Prop :=
+| JTCArr : forall H t s,
+  jt_constructor v H t KStar ->
+  jt_constructor v H s KStar ->
+  jt_constructor v H (TArr t s) KStar
+| JTCProd : forall H t s,
+  jt_constructor v H t KStar ->
+  jt_constructor v H s KStar ->
+  jt_constructor v H (TProd t s) KStar
+| JTCSum : forall H t s,
+  jt_constructor v H t KStar ->
+  jt_constructor v H s KStar ->
+  jt_constructor v H (TSum t s) KStar
+| JTCFor : forall H k t,
+  (mE v -> jobj v H (Jwf k CKind)) ->
+  jt_constructor v (HCons H k) t KStar ->
+  jt_constructor v H (TFor k t) KStar
+| JTCPi : forall H k t,
+  (mE v -> jobj v H (Jwf k CKind)) ->
+  jt_constructor v (HCons H k) t KStar ->
+  jt_constructor v H (TPi k t) KStar
+| JTCMu : forall H t,
+  jrec 0 t WF ->
+  jt_constructor v (HCons H KStar) t KStar ->
+  mR v -> jt_constructor v H (TMu t) KStar
+| JTCPair : forall H t1 t2 k1 k2,
+  jt_constructor v H t1 k1 ->
+  jt_constructor v H t2 k2 ->
+  jt_constructor v H (TPair t1 t2) (KProd k1 k2)
+| JTCPairEta : forall H t k1 k2,
+  jt_constructor v H (TFst t) k1 ->
+  jt_constructor v H (TSnd t) k2 ->
+  jt_constructor v H t (KProd k1 k2)
+| JTCPack : forall H t k p,
+  (mE v -> jobj v (HCons H k) (Jwf p CProp)) ->
+  jt_constructor v H t k->
+  jobj v H (JP YNil YNil (subst t 0 p)) ->
+  jt_constructor v H t (KRes k p)
+| JTCeq : forall H t k k',
+  jt_constructor v H t k ->
+  jeq k k' CKind ->
+  (mE v -> jobj v H (Jwf k' CKind)) ->
+  jt_constructor v H t k'
+| JTCDestructor : forall H t k,
+                    jt_destructor v H t k ->
+                    jt_constructor v H t k
+.
+
+Definition jt_algo v H t k := jt_constructor v H t k.
+
+Definition jobj_of jt :=
+  forall v H t k, jt v H t k -> jobj v H (JT t k).
+
+Lemma jobj_of_jt_base : jobj_of jt_base.
+  intros v H t k j. inversion j; constructor; auto.
+Qed.
+
+Lemma jobj_of_jt_destructor : jobj_of jt_destructor.
+  intros v H t k j.
+  induction j.
+  - apply JTFst with k2; auto.
+  - apply JTSnd with k1; auto.
+  - apply JTUnpack with p; auto.
+  - apply JTeq with k.
+    * apply jobj_of_jt_base; auto.
+    * apply jeq_of_keq; auto.
+    * auto.
+Qed.
+
+Lemma jobj_of_jt_constructor : jobj_of jt_constructor.
+Proof.
+  intros v H t k j.
+  induction j; try (constructor; auto).
+  - apply JTeq with k; auto.
+  - apply jobj_of_jt_destructor; auto.
+Qed.
+
+Definition jobj_of_jt_algo : jobj_of jt_algo := jobj_of_jt_constructor.
+
+(* missing: jt_algo_of_jobj, ie. the normalization procedure *)
+
 Definition extrajudg v H J :=
   match J with
     | JK k => jobj v H (Jwf k CKind)
