@@ -67,9 +67,8 @@ Definition sunit so :=
 
 Definition sprod f1 f2 so :=
   match so with
-    | SSet _ => False
-    | SUnit => False
     | SPair so1 so2 => f1 so1 /\ f2 so2
+    | _ => f1 SUnit /\ f2 SUnit
   end.
 
 Definition getstar so :=
@@ -1606,24 +1605,44 @@ induction 1; unfold semjudg in *; try exact I.
   semobjeq H; rename fH2 into fH.
   exists fH, (fun h => SPair (ft1 h) (ft2 h)), (fun h => sprod (fk1 h) (fk2 h)).
   split; [|split; [|split]]; eauto using semobj.
+(* 35bis: JTPairEta *)
+  {
+  destruct IHjobj1 as [fH1 [ft1 [fk1 [? [? [? ?]]]]]].
+  destruct IHjobj2 as [fH2 [ft2 [fk2 [? [? [? ?]]]]]].
+  semobjeq H; rename fH2 into fH.
+  inversion H2; clear H2; subst.
+  inversion H6; clear H6; subst.
+  semobjeq t.
+  exists fH, (fun h => ft0 h), (fun h => sprod (fk1 h) (fk2 h)).
+  split; [|split; [|split]]; eauto using semobj.
+  intros.
+  remember (ft0 h) as obj.
+  pose (H3 h H0) as C1'.
+  pose (H7 h H0) as C2'.
+  rewrite <- Heqobj in C1'.
+  rewrite <- Heqobj in C2'.
+  destruct obj; simpl in C1'; simpl in C2'; split; auto.
+  }
 (* 34: JTFst *)
+  {
   destruct IHjobj as [fH [ft [fk [? [? [? ?]]]]]].
   dep H2.
   exists fH, (fun h => sfst (ft h)), f1.
   split; [|split; [|split]]; eauto using semobj.
   intros h fHh.
   pose proof (H4 h fHh).
-  destruct (ft h); simpl in *; try (exfalso; assumption).
-  destruct H2; assumption.
+  destruct (ft h); destruct H2; assumption.
+  }
 (* 33: JTSnd *)
+  {
   destruct IHjobj as [fH [ft [fk [? [? [? ?]]]]]].
   dep H2.
   exists fH, (fun h => ssnd (ft h)), f2.
   split; [|split; [|split]]; eauto using semobj.
   intros h fHh.
   pose proof (H4 h fHh).
-  destruct (ft h); simpl in *; try (exfalso; assumption).
-  destruct H2; assumption.
+  destruct (ft h); destruct H2; assumption.
+  }
 (* 32: JTPack *)
   destruct IHjobj1 as [fH1 [ft [fk [? [? [? Ck]]]]]].
   destruct IHjobj2 as [fH2 [fp [? [? Cp]]]].
