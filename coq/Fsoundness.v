@@ -1828,7 +1828,17 @@ induction 1; unfold semjudg in *; try exact I.
   semobjeq_rename H fH sH.
   exists fH, (fun h => SPair (ft1 h) (ft2 h)), (fun h => sprod (fk1 h) (fk2 h)).
   split; [|split; [|split]]; eauto using semobj.
-(* 34: JTFst *)
+(* 35bis: JTPairEta *)
+  destruct IHjobj1 as [fH1 [ft1 [fk1 [? [? [? C1]]]]]].
+  destruct IHjobj2 as [fH2 [ft2 [fk2 [? [? [? C2]]]]]].
+  semobjeq_rename H fH sH.
+  exists fH, (fun h => SPair (ft1 h) (ft2 h)), (fun h => sprod (fk1 h) (fk2 h)).
+  repeat split;  eauto using semobj.
+  semobj_cstr.
+  
+  (* TODO complete; I think one would have to change Fst and Snd
+     semantics to only accept pairs *)
+KP(* 34: JTFst *)
   destruct IHjobj as [fH [ft [fk [? [? [? Ck]]]]]].
   semobj_cstr.
   exists fH, (fun h => sfst (ft h)), f1.

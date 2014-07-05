@@ -1708,6 +1708,74 @@ inversion j2; clear j2; subst.
 apply WHCons with HH'; auto.
 Qed.
 
+Inductive keq_algo : kind -> kind -> Prop :=
+| KeqStar : keq_algo KStar KStar
+| KeqOne : keq_algo KOne KOne
+| KeqProd : forall k1 k2 k'1 k'2,
+  keq_algo k1 k'1 ->
+  keq_algo k2 k'2 ->
+  keq_algo (KProd k1 k2) (KProd k'1 k'2)
+| KeqRes : forall k p k' p',
+  keq_algo k k' ->
+  jeq p p' CProp ->
+  keq_algo (KRes k p) (KRes k' p')
+.
+
+Lemma jeq_of_keq : forall k k', keq_algo k k' -> jeq k k' CKind.
+Proof.
+  induction 1.
+  - repeat constructor.
+  - repeat constructor.
+  - apply EQcongrKProd; auto.
+  - apply EQcongrKRes; auto.
+Qed.
+
+Lemma keq_refl : forall k, cobj k CKind -> keq_algo k k.
+Proof.
+  induction k; intro H; inversion H; clear H; subst.
+  - repeat constructor.
+  - repeat constructor.
+  - constructor; [ apply IHk1 | apply IHk2 ]; auto.
+  - constructor; [ apply IHk1 | constructor ]; auto.
+Qed.
+
+Lemma keq_symm : forall k1 k2, keq_algo k1 k2 -> keq_algo k2 k1.
+  induction 1; constructor; auto.
+  apply EQsym; auto.
+Qed.
+
+Lemma keq_trans : forall k1 k2,
+  keq_algo k1 k2 -> forall k3, keq_algo k2 k3 -> keq_algo k1 k3.
+  induction 1; auto.
+  - inversion_clear 1; constructor.
+    apply IHkeq_algo1; auto.
+    apply IHkeq_algo2; auto.
+  - inversion_clear 1; constructor.
+    auto.
+    apply EQtrans with p'; auto.
+Qed.
+
+Lemma keq_of_jeq : forall k k' c,
+  jeq k k' c -> c = CKind -> keq_algo k k'.
+Proof.
+  induction 1; intro Hclass; inversion Hclass; clear Hclass; subst.
+  - apply keq_refl; auto.
+  - apply keq_symm; auto.
+  - apply keq_trans with o2; auto.
+  - constructor; auto.
+  - constructor; auto.
+Qed.
+
+Lemma keq_prod : forall k1 k2 k', jeq (KProd k1 k2) k' CKind ->
+  exists k'1 k'2, k' = KProd k'1 k'2.
+Proof.
+  intros k1 k2 k' Hk.
+  assert (keq_algo (KProd k1 k2) k') by
+    ( apply keq_of_jeq with CKind; auto ).
+  inversion_clear H.
+  eauto.
+Qed.
+
 Definition extrajudg v H J :=
   match J with
     | JK k => jobj v H (Jwf k CKind)
