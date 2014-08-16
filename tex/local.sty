@@ -151,11 +151,11 @@
 \newcommand{\jrec}[2]{#1 \mapsto #2 :}
 \newcommand{\jeq}[1]{#1 =}
 \newcommand{\JK}[1]{#1 \vdash}
-\newcommand{\JT}[2]{#1 \vdash #2 :}
+\newcommand{\JT}[3]{#1 \vdash #2 = #3 :}
 \newcommand{\JP}[3]{#1 ; #2 ; #3 \vdash}
 \newcommand{\JC}[5]{#1 ; #2 ; #3 \vdash^\star \PCoer{#4}{#5}}
 \newcommand{\JH}[1]{#1 \vdash}
-\newcommand{\Jwf}[1]{#1 \Vdash}
+\newcommand{\Jwf}[2]{#1 \Vdash #2 =}
 \newcommand{\JG}[1]{#1 \vdash}
 \newcommand{\jterm}[3]{#1 ; #2 \vdash #3 :}
 \newcommand{\WF}[0]{\mathrm{WF}}
@@ -168,7 +168,7 @@
 \newcommand{\Subst}[3]{#1[#2\leftarrow #3]}
 \newcommand{\Happ}[1]{#1,}
 \newcommand{\Yapp}[1]{#1,}
-\newcommand{\Ex}[1]{#1 \Rightarrow}
+\newcommand{\Ex}[1]{}%{#1 \Rightarrow}
 
 % Operators
 \newcommand{\dom}[1]{\mathop{\mathsf{dom}}(#1)}
@@ -217,6 +217,8 @@
 \newcommand{\Pap}[0]{\Pa'}
 \newcommand{\Pai}[0]{\Pa_1}
 \newcommand{\Paii}[0]{\Pa_2}
+\newcommand{\Paip}[0]{\Pa_1'}
+\newcommand{\Paiip}[0]{\Pa_2'}
 \newcommand{\Qa}[0]{\efont{Q}}
 \newcommand{\Qai}[0]{\Qa_1}
 \newcommand{\Qaii}[0]{\Qa_2}
@@ -256,6 +258,8 @@
 \newcommand{\kap}[0]{\ka'}
 \newcommand{\kai}[0]{\ka_1}
 \newcommand{\kaii}[0]{\ka_2}
+\newcommand{\kaip}[0]{\ka_1'}
+\newcommand{\kaiip}[0]{\ka_2'}
 \newcommand{\ta}[0]{\tau}
 \newcommand{\tap}[0]{\ta'}
 \newcommand{\tapp}[0]{\tap'}
