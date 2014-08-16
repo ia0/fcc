@@ -1505,26 +1505,26 @@ pose proof (@jobj_subst v H k s (HCons H k) j H1 H0 cH HNil H).
 apply H2; auto using Happ.
 Qed.
 
-Lemma Hnth_extra : forall {v H a k}, Hnth H a k -> jobj v HNil (Jwf H CTEnv) ->
-  jobj v H (Jwf (lift (1 + a) 0 k) CKind).
+Lemma Hnth_extra : forall {v H a k}, Hnth H a k -> jobj v HNil (Jwf H H CTEnv) ->
+  jobj v H (Jwf (lift (1 + a) 0 k) (lift (1 + a) 0 k) CKind).
 Proof.
 induction 1; simpl; intros; eauto using jobj, cobj.
 (* *)
   inversion H0; clear H0; subst.
-  rewrite <- (Happ_HNil_eq H4) in H7.
-  destruct (jobj_class H7) as [_ ?].
-  apply (jobj_shift_0 H7); auto.
+  rewrite <- (Happ_HNil_eq H8) in H11.
+  destruct (jobj_class H11) as [_ [_ ?]].
+  apply (jobj_shift_0 H11); auto.
 (* *)
   inversion H1; clear H1; subst.
-  destruct (jobj_class H8) as [_ ?].
-  pose proof (@jobj_shift_0 _ k' _ _ (IHHnth H7) H1).
+  destruct (jobj_class H12) as [_ [_ ?]].
+  pose proof (@jobj_shift_0 _ k' _ _ (IHHnth H11) H1).
   simpl in H2.
   rewrite lift_fusion in H2; [|omega..].
   assumption.
 Qed.
 
 Lemma Ynth_extra : forall {v H Y n p}, Ynth Y n p -> cobj H CTEnv ->
-  jobj v H (Jwf Y CPEnv) -> jobj v H (Jwf p CProp).
+  jobj v H (Jwf Y Y CPEnv) -> jobj v H (Jwf p p CProp).
 Proof.
 induction 1; simpl; intros; eauto using jobj, cobj.
 inversion H1; clear H1; subst; auto.
@@ -1532,18 +1532,18 @@ inversion H2; clear H2; subst; auto.
 Qed.
 
 Lemma Happ_Jwf : forall v {a b ab c bc}, Happ a b ab -> Happ b c bc -> cobj bc CTEnv ->
-  jobj v a (Jwf b CTEnv) -> jobj v ab (Jwf c CTEnv) -> jobj v a (Jwf bc CTEnv).
+  jobj v a (Jwf b b CTEnv) -> jobj v ab (Jwf c c CTEnv) -> jobj v a (Jwf bc bc CTEnv).
 Proof.
 induction 2; simpl; intros; auto.
 inversion H3; clear H3; subst.
 inversion H5; clear H5; subst.
 destruct (Happ_cobj_rev H0 H9).
-apply WHCons with HH'; auto.
+apply WHCons with HH1; auto.
 apply Happ_assoc_right with (ab:=ab) (b:=H2) (c:=H1); auto.
 Qed.
 
 Lemma Happ_Jwf_0 : forall v {a b ab}, Happ a b ab -> cobj ab CTEnv ->
-  jobj v HNil (Jwf a CTEnv) -> jobj v a (Jwf b CTEnv) -> jobj v HNil (Jwf ab CTEnv).
+  jobj v HNil (Jwf a a CTEnv) -> jobj v a (Jwf b b CTEnv) -> jobj v HNil (Jwf ab ab CTEnv).
 Proof.
 intros.
 destruct (Happ_cobj_rev H H0).
@@ -1562,8 +1562,8 @@ apply Happ_assoc_right with (ab:=ab) (b:=H2) (c:=H1); auto.
 Qed.
 
 Lemma Yapp_Jwf : forall {v H Y0 Y1 Y0Y1}, Yapp Y0 Y1 Y0Y1 ->
-  jobj v H (Jwf Y0 CPEnv) -> jobj v H (Jwf Y1 CPEnv) ->
-  jobj v H (Jwf Y0Y1 CPEnv).
+  jobj v H (Jwf Y0 Y0 CPEnv) -> jobj v H (Jwf Y1 Y1 CPEnv) ->
+  jobj v H (Jwf Y0Y1 Y0Y1 CPEnv).
 Proof.
 induction 1; simpl; intros; auto.
 inversion H2; clear H2; subst.
@@ -1575,26 +1575,37 @@ Inductive KRes_ctx : obj -> Prop :=
 | KRes1 : forall k p, KRes_ctx k -> KRes_ctx (KRes k p)
 .
 
-Lemma KRes_ctx_jeq : forall k1, KRes_ctx k1 -> forall k2, jeq k1 k2 CKind -> KRes_ctx k2.
-Proof.
-induction 1; simpl; intros.
-{ rewrite (jeq_KStar_rev k2); auto using KRes_ctx. }
-destruct (jeq_KRes_rev _ _ _ H0) as [k' [p' [? [? _]]]]; subst.
-apply KRes1; auto.
-Qed.
+(* Lemma KRes_ctx_jeq : forall k1, KRes_ctx k1 -> forall k2, jeq k1 k2 CKind -> KRes_ctx k2. *)
+(* Proof. *)
+(* induction 1; simpl; intros. *)
+(* { rewrite (jeq_KStar_rev k2); auto using KRes_ctx. } *)
+(* destruct (jeq_KRes_rev _ _ _ H0) as [k' [p' [? [? _]]]]; subst. *)
+(* apply KRes1; auto. *)
+(* Qed. *)
 
-Lemma jobj_TArr_inversion_ctx : forall v H t s k, mE v -> jobj v H (JT (TArr t s) k) ->
-  KRes_ctx k -> jobj v H (JT t KStar) /\ jobj v H (JT s KStar).
+Lemma jobj_TArr_inversion_ctx : forall v H t1 t2 t s k,
+  mE v -> jobj v H (JT t1 t2 k) ->
+  (t1 = (TArr t s) \/ t2 = (TArr t s)) ->
+  KRes_ctx k -> jobj v H (JT t t KStar) /\ jobj v H (JT s s KStar).
 Proof.
-intros v H t s k mEv Hts.
-remember (JT (TArr t s) k) as j.
-generalize t s k Heqj; clear t s k Heqj.
-induction Hts; intros t0 s0 k0 Heqj krc; inversion Heqj; clear Heqj; subst; auto.
-{ apply IHHts with k; auto.
-  apply KRes_ctx_jeq with k0; auto using EQsym. }
+intros v H t1 t2 t s k mEv Hts.
+remember (JT t1 t2 k) as j.
+generalize t1 t2 t s k Heqj; clear t1 t2 t s k Heqj.
+induction Hts; intros t01 t02 t0 s0 k0 Heqj Heqa krc; inversion Heqj; clear Heqj; subst;
+destruct Heqa as [Heqa|Heqa]; inversion Heqa; subst; eauto.
+admit. (* JTeq 1 *)
+admit. (* JTeq 2 *)
+(* { (* JTeq *) *)
+(*   apply IHHts with k; auto. *)
+(*   apply KRes_ctx_jeq with k0; auto using EQsym. } *)
+{ (* JTsym *)
+  destruct (IHHts _ _ _ eq_refl); auto. }
+{ (* JTtrans *)
+  destruct (IHHts1 _ _ _ eq_refl); auto.
+  split; apply JTsym; auto. }
 { inversion krc; clear krc; subst.
   apply IHHts1 with k; auto. }
-apply IHHts with (KRes k0 p); auto using KRes_ctx.
+{ apply IHHts with (KRes k0 p); auto using KRes_ctx. }
 Qed.
 
 Lemma jobj_TArr_inversion : forall {v H t s}, mE v -> jobj v H (JT (TArr t s) KStar) ->
