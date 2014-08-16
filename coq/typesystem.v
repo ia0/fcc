@@ -39,14 +39,14 @@ Inductive obj : Set :=
 (* types *)
 | TVar (x : nat)
 | TArr (t : obj) (s : obj)
-| TOne
-| TProd (t : obj) (s : obj)
-| TVoid
-| TSum (t : obj) (s : obj)
-| TFor (k : obj) (t : obj)
-| TPi (k : obj) (t : obj)
-| TMu (t : obj)
-| TBot
+(* | TOne *)
+(* | TProd (t : obj) (s : obj) *)
+(* | TVoid *)
+(* | TSum (t : obj) (s : obj) *)
+(* | TFor (k : obj) (t : obj) *)
+(* | TPi (k : obj) (t : obj) *)
+(* | TMu (t : obj) *)
+(* | TBot *)
 | TTop
 | TUnit
 | TPair (t1 : obj) (t2 : obj)
@@ -100,14 +100,14 @@ Inductive cobj : obj -> class -> Prop :=
 (* types *)
 | CTVar : forall x, cobj (TVar x) CType
 | CTArr : forall t s, cobj t CType -> cobj s CType -> cobj (TArr t s) CType
-| CTOne : cobj TOne CType
-| CTProd : forall t s, cobj t CType -> cobj s CType -> cobj (TProd t s) CType
-| CTVoid : cobj TVoid CType
-| CTSum : forall t s, cobj t CType -> cobj s CType -> cobj (TSum t s) CType
-| CTFor : forall k t, cobj k CKind -> cobj t CType -> cobj (TFor k t) CType
-| CTPi : forall k t, cobj k CKind -> cobj t CType -> cobj (TPi k t) CType
-| CTMu : forall t, cobj t CType -> cobj (TMu t) CType
-| CTBot : cobj TBot CType
+(* | CTOne : cobj TOne CType *)
+(* | CTProd : forall t s, cobj t CType -> cobj s CType -> cobj (TProd t s) CType *)
+(* | CTVoid : cobj TVoid CType *)
+(* | CTSum : forall t s, cobj t CType -> cobj s CType -> cobj (TSum t s) CType *)
+(* | CTFor : forall k t, cobj k CKind -> cobj t CType -> cobj (TFor k t) CType *)
+(* | CTPi : forall k t, cobj k CKind -> cobj t CType -> cobj (TPi k t) CType *)
+(* | CTMu : forall t, cobj t CType -> cobj (TMu t) CType *)
+(* | CTBot : cobj TBot CType *)
 | CTTop : cobj TTop CType
 | CTUnit : cobj TUnit CType
 | CTPair : forall t1 t2, cobj t1 CType -> cobj t2 CType -> cobj (TPair t1 t2) CType
@@ -232,14 +232,14 @@ Definition traverse f := fix g i o :=
   | KRes k p => KRes (g i k) (g (1 + i) p)
   | TVar a => f a i
   | TArr t s => TArr (g i t) (g i s)
-  | TOne => TOne
-  | TProd t s => TProd (g i t) (g i s)
-  | TVoid => TVoid
-  | TSum t s => TSum (g i t) (g i s)
-  | TFor k t => TFor (g i k) (g (1 + i) t)
-  | TPi k t => TPi (g i k) (g (1 + i) t)
-  | TMu t => TMu (g (1 + i) t)
-  | TBot => TBot
+  (* | TOne => TOne *)
+  (* | TProd t s => TProd (g i t) (g i s) *)
+  (* | TVoid => TVoid *)
+  (* | TSum t s => TSum (g i t) (g i s) *)
+  (* | TFor k t => TFor (g i k) (g (1 + i) t) *)
+  (* | TPi k t => TPi (g i k) (g (1 + i) t) *)
+  (* | TMu t => TMu (g (1 + i) t) *)
+  (* | TBot => TBot *)
   | TTop => TTop
   | TUnit => TUnit
   | TPair t s => TPair (g i t) (g i s)
@@ -519,60 +519,13 @@ Inductive recsort := WF | NE.
 Inductive jrec : nat -> type -> recsort -> Prop :=
 | RECVar : forall a, jrec a (TVar a) NE
 | RECArr : forall a t s, jrec a t NE -> jrec a s NE -> jrec a (TArr t s) WF
-| RECProd : forall a t s, jrec a t NE -> jrec a s NE -> jrec a (TProd t s) WF
-| RECSum : forall a t s, jrec a t NE -> jrec a s NE -> jrec a (TSum t s) WF
-| RECFor : forall rec a k k' t, k = shift a k' -> jrec (1 + a) t rec -> jrec a (TFor k t) rec
-| RECPi : forall a k k' t, k = shift a k' -> jrec (1 + a) t NE -> jrec a (TPi k t) WF
-| RECMu : forall rec a t, jrec 0 t WF -> jrec (1 + a) t rec -> jrec a (TMu t) rec
+(* | RECProd : forall a t s, jrec a t NE -> jrec a s NE -> jrec a (TProd t s) WF *)
+(* | RECSum : forall a t s, jrec a t NE -> jrec a s NE -> jrec a (TSum t s) WF *)
+(* | RECFor : forall rec a k k' t, k = shift a k' -> jrec (1 + a) t rec -> jrec a (TFor k t) rec *)
+(* | RECPi : forall a k k' t, k = shift a k' -> jrec (1 + a) t NE -> jrec a (TPi k t) WF *)
+(* | RECMu : forall rec a t, jrec 0 t WF -> jrec (1 + a) t rec -> jrec a (TMu t) rec *)
 | RECwf : forall a t t', t = shift a t' -> jrec a t WF
 | RECne : forall a t, jrec a t WF -> jrec a t NE
-.
-
-(** *** Equality *)
-
-(** We write [jeq o1 o2] when objects [o1] and [o2] are equal. The
-soundness of the transitivity rule needs the intermediate object [o2]
-to be syntactically well-formed. See the discussion for the definition
-of the inductive [jobj] later in this file.
-*)
-Inductive jeq : type -> type -> class -> Prop :=
-| EQrefl : forall o c, cobj o c -> jeq o o c
-| EQsym : forall o1 o2 c, jeq o1 o2 c -> jeq o2 o1 c
-| EQtrans : forall o1 o2 o3 c, jeq o1 o2 c -> jeq o2 o3 c -> jeq o1 o3 c
-| EQcongrKProd :  forall k11 k12 k21 k22,
-  jeq k11 k12 CKind -> jeq k21 k22 CKind -> jeq (KProd k11 k21) (KProd k12 k22) CKind
-| EQcongrKRes : forall k1 k2 p1 p2,
-  jeq k1 k2 CKind -> jeq p1 p2 CProp -> jeq (KRes k1 p1) (KRes k2 p2) CKind
-| EQcongrTArr : forall t1 t2 s1 s2,
-  jeq t1 t2 CType -> jeq s1 s2 CType -> jeq (TArr t1 s1) (TArr t2 s2) CType
-| EQcongrTProd : forall t1 t2 s1 s2,
-  jeq t1 t2 CType -> jeq s1 s2 CType -> jeq (TProd t1 s1) (TProd t2 s2) CType
-| EQcongrTSum : forall t1 t2 s1 s2,
-  jeq t1 t2 CType -> jeq s1 s2 CType -> jeq (TSum t1 s1) (TSum t2 s2) CType
-| EQcongrTFor : forall k1 k2 t1 t2,
-  jeq k1 k2 CKind -> jeq t1 t2 CType -> jeq (TFor k1 t1) (TFor k2 t2) CType
-| EQcongrTPi : forall k1 k2 t1 t2,
-  jeq k1 k2 CKind -> jeq t1 t2 CType -> jeq (TPi k1 t1) (TPi k2 t2) CType
-| EQcongrTMu : forall t1 t2, jeq t1 t2 CType -> jeq (TMu t1) (TMu t2) CType
-| EQcongrTPair : forall t1 t2 s1 s2,
-  jeq t1 t2 CType -> jeq s1 s2 CType -> jeq (TPair t1 s1) (TPair t2 s2) CType
-| EQcongrTFst : forall t1 t2, jeq t1 t2 CType -> jeq (TFst t1) (TFst t2) CType
-| EQcongrTSnd : forall t1 t2, jeq t1 t2 CType -> jeq (TSnd t1) (TSnd t2) CType
-| EQcongrPAnd : forall p11 p12 p21 p22,
-  jeq p11 p12 CProp -> jeq p21 p22 CProp -> jeq (PAnd p11 p21) (PAnd p12 p22) CProp
-| EQcongrPCoer : forall H1 H2 t1 t2 s1 s2,
-  jeq H1 H2 CTEnv -> jeq t1 t2 CType -> jeq s1 s2 CType -> jeq (PCoer H1 t1 s1) (PCoer H2 t2 s2) CProp
-| EQcongrPExi : forall k1 k2, jeq k1 k2 CKind -> jeq (PExi k1) (PExi k2) CProp
-| EQcongrPFor : forall k1 k2 p1 p2,
-  jeq k1 k2 CKind -> jeq p1 p2 CProp -> jeq (PFor k1 p1) (PFor k2 p2) CProp
-| EQcongrHCons : forall H1 H2 k1 k2,
-  jeq H1 H2 CTEnv -> jeq k1 k2 CKind -> jeq (HCons H1 k1) (HCons H2 k2) CTEnv
-| EQcongrYCons : forall Y1 Y2 p1 p2,
-  jeq Y1 Y2 CPEnv -> jeq p1 p2 CProp -> jeq (YCons Y1 p1) (YCons Y2 p2) CPEnv
-| EQcongrGCons : forall G1 G2 t1 t2,
-  jeq G1 G2 CAEnv -> jeq t1 t2 CType -> jeq (GCons G1 t1) (GCons G2 t2) CAEnv
-| EQTFstPair : forall t s, cobj t CType -> cobj s CType -> jeq (TFst (TPair t s)) t CType
-| EQTSndPair : forall t s, cobj t CType -> cobj s CType -> jeq (TSnd (TPair t s)) s CType
 .
 
 (** *** Objects
@@ -594,24 +547,24 @@ discuss this notion in the next paragraph (inductive [jobj]).
 *)
 Inductive judg : Set :=
 | JK (k : kind)
-| JT (t : type) (k : kind)
+| JT (t' : type) (t : type) (k : kind)
 | JP (Y0 : penv) (Y1 : penv) (p : prop)
 | JC (Y0 : penv) (Y1 : penv) (H' : tenv) (t' : type) (t : type)
 | JH (H' : tenv)
 | JG (G : aenv)
-| Jwf (o : obj) (c : class)
+| Jwf (o' : obj) (o : obj) (c : class)
 .
 
 Definition jlift d i j :=
   match j with
     | JK k => JK (lift d i k)
-    | JT t k => JT (lift d i t) (lift d i k)
+    | JT t' t k => JT (lift d i t') (lift d i t) (lift d i k)
     | JP Y0 Y1 p => JP (lift d i Y0) (lift d i Y1) (lift d i p)
     | JC Y0 Y1 H' t' t => JC (lift d i Y0) (lift d i Y1)
                              (lift d i H') (lift d (Hlength H' + i) t') (lift d i t)
     | JH H' => JH (lift d i H')
     | JG G => JG (lift d i G)
-    | Jwf o c => Jwf (lift d i o) c
+    | Jwf o' o c => Jwf (lift d i o') (lift d i o) c
   end.
 
 Lemma jlift_0 : forall j, jlift 0 0 j = j.
@@ -648,13 +601,13 @@ Qed.
 Definition jsubst s i j :=
   match j with
     | JK k => JK (subst s i k)
-    | JT t k => JT (subst s i t) (subst s i k)
+    | JT t' t k => JT (subst s i t') (subst s i t) (subst s i k)
     | JP Y0 Y1 p => JP (subst s i Y0) (subst s i Y1) (subst s i p)
     | JC Y0 Y1 H' t' t => JC (subst s i Y0) (subst s i Y1)
                              (subst s i H') (subst s (Hlength H' + i) t') (subst s i t)
     | JH H' => JH (subst s i H')
     | JG G => JG (subst s i G)
-    | Jwf o c => Jwf (subst s i o) c
+    | Jwf o' o c => Jwf (subst s i o') (subst s i o) c
   end.
 
 Lemma jlift_subst2 : forall b, cobj b CType ->
@@ -706,81 +659,97 @@ Inductive jobj v : tenv -> judg -> Prop :=
 (* kinds *)
 | JKexi : forall H k,
   jobj v H (JP YNil YNil (PExi k)) ->
-  (mE v -> jobj v H (Jwf k CKind)) ->
+  (mE v -> jobj v H (Jwf k k CKind)) ->
   jobj v H (JK k)
 (* types *)
-| JTeq : forall H t k k',
-  jobj v H (JT t k) ->
-  jeq k k' CKind ->
-  (mE v -> jobj v H (Jwf k' CKind)) ->
-  jobj v H (JT t k')
+| JTeq : forall H t' t k k',
+  jobj v H (JT t' t k') ->
+  jobj v H (Jwf k' k CKind) ->
+  jobj v H (JT t' t k)
+| JTsym : forall H t t' k,
+  jobj v H (JT t t' k) ->
+  jobj v H (JT t' t k)
+| JTtrans : forall H t1 t2 t3 k,
+  jobj v H (JT t1 t2 k) ->
+  jobj v H (JT t2 t3 k) ->
+  jobj v H (JT t1 t3 k)
+| JTBFst : forall H t1 t2 k1 k2,
+  jobj v H (JT t1 t1 k1) ->
+  jobj v H (JT t2 t2 k2) ->
+  jobj v H (JT (TFst (TPair t1 t2)) t1 k1)
+| JTBSnd : forall H t1 t2 k1 k2,
+  jobj v H (JT t1 t1 k1) ->
+  jobj v H (JT t2 t2 k2) ->
+  jobj v H (JT (TSnd (TPair t1 t2)) t2 k2)
+| JTEProd : forall H t k1 k2,
+  jobj v H (JT t t (KProd k1 k2)) ->
+  jobj v H (JT t (TPair (TFst t) (TSnd t)) (KProd k1 k2))
 | JTVar : forall H a k,
   cobj H CTEnv ->
   Hnth H a k ->
-  jobj v H (JT (TVar a) (lift (1 + a) 0 k))
-| JTArr : forall H t s,
-  jobj v H (JT t KStar) ->
-  jobj v H (JT s KStar) ->
-  jobj v H (JT (TArr t s) KStar)
-| JTOne : forall H,
-  cobj H CTEnv ->
-  jobj v H (JT TOne KStar)
-| JTProd : forall H t s,
-  jobj v H (JT t KStar) ->
-  jobj v H (JT s KStar) ->
-  jobj v H (JT (TProd t s) KStar)
-| JTVoid : forall H,
-  cobj H CTEnv ->
-  jobj v H (JT TVoid KStar)
-| JTSum : forall H t s,
-  jobj v H (JT t KStar) ->
-  jobj v H (JT s KStar) ->
-  jobj v H (JT (TSum t s) KStar)
-| JTFor : forall H k t,
-  (mE v -> jobj v H (Jwf k CKind)) ->
-  jobj v (HCons H k) (JT t KStar) ->
-  jobj v H (JT (TFor k t) KStar)
-| JTPi : forall H k t,
-  (mE v -> jobj v H (Jwf k CKind)) ->
-  jobj v (HCons H k) (JT t KStar) ->
-  jobj v H (JT (TPi k t) KStar)
-| JTMu : forall H t,
-  jrec 0 t WF ->
-  jobj v (HCons H KStar) (JT t KStar) ->
-  mR v -> jobj v H (JT (TMu t) KStar)
-| JTBot : forall H,
-  cobj H CTEnv ->
-  jobj v H (JT TBot KStar)
+  jobj v H (JT (TVar a) (TVar a) (lift (1 + a) 0 k))
+| JTArr : forall H t' t s' s,
+  jobj v H (JT t' t KStar) ->
+  jobj v H (JT s' s KStar) ->
+  jobj v H (JT (TArr t' s') (TArr t s) KStar)
+(* | JTOne : forall H, *)
+(*   cobj H CTEnv -> *)
+(*   jobj v H (JT TOne KStar) *)
+(* | JTProd : forall H t s, *)
+(*   jobj v H (JT t KStar) -> *)
+(*   jobj v H (JT s KStar) -> *)
+(*   jobj v H (JT (TProd t s) KStar) *)
+(* | JTVoid : forall H, *)
+(*   cobj H CTEnv -> *)
+(*   jobj v H (JT TVoid KStar) *)
+(* | JTSum : forall H t s, *)
+(*   jobj v H (JT t KStar) -> *)
+(*   jobj v H (JT s KStar) -> *)
+(*   jobj v H (JT (TSum t s) KStar) *)
+(* | JTFor : forall H k t, *)
+(*   (mE v -> jobj v H (Jwf k CKind)) -> *)
+(*   jobj v (HCons H k) (JT t KStar) -> *)
+(*   jobj v H (JT (TFor k t) KStar) *)
+(* | JTPi : forall H k t, *)
+(*   (mE v -> jobj v H (Jwf k CKind)) -> *)
+(*   jobj v (HCons H k) (JT t KStar) -> *)
+(*   jobj v H (JT (TPi k t) KStar) *)
+(* | JTMu : forall H t, *)
+(*   jrec 0 t WF -> *)
+(*   jobj v (HCons H KStar) (JT t KStar) -> *)
+(*   mR v -> jobj v H (JT (TMu t) KStar) *)
+(* | JTBot : forall H, *)
+(*   cobj H CTEnv -> *)
+(*   jobj v H (JT TBot KStar) *)
 | JTTop : forall H,
   cobj H CTEnv ->
-  jobj v H (JT TTop KStar)
+  jobj v H (JT TTop TTop KStar)
 | JTUnit : forall H,
   cobj H CTEnv ->
-  jobj v H (JT TUnit KOne)
-| JTPair : forall H t1 t2 k1 k2,
-  jobj v H (JT t1 k1) ->
-  jobj v H (JT t2 k2) ->
-  jobj v H (JT (TPair t1 t2) (KProd k1 k2))
-| JTFst : forall H t k1 k2,
-  jobj v H (JT t (KProd k1 k2)) ->
-  jobj v H (JT (TFst t) k1)
-| JTSnd : forall H t k1 k2,
-  jobj v H (JT t (KProd k1 k2)) ->
-  jobj v H (JT (TSnd t) k2)
-| JTPack : forall H t k p,
-  (mE v -> jobj v (HCons H k) (Jwf p CProp)) ->
-  jobj v H (JT t k) ->
+  jobj v H (JT TUnit TUnit KOne)
+| JTPair : forall H t1' t1 t2' t2 k1 k2,
+  jobj v H (JT t1' t1 k1) ->
+  jobj v H (JT t2' t2 k2) ->
+  jobj v H (JT (TPair t1' t2') (TPair t1 t2) (KProd k1 k2))
+| JTFst : forall H t' t k1 k2,
+  jobj v H (JT t' t (KProd k1 k2)) ->
+  jobj v H (JT (TFst t') (TFst t) k1)
+| JTSnd : forall H t' t k1 k2,
+  jobj v H (JT t' t (KProd k1 k2)) ->
+  jobj v H (JT (TSnd t') (TSnd t) k2)
+| JTPack : forall H t' t k p,
+  (mE v -> jobj v (HCons H k) (Jwf p p CProp)) ->
+  jobj v H (JT t' t k) ->
   jobj v H (JP YNil YNil (subst t 0 p)) ->
-  jobj v H (JT t (KRes k p))
-| JTUnpack : forall H t k p,
-  jobj v H (JT t (KRes k p)) ->
-  jobj v H (JT t k)
+  jobj v H (JT t' t (KRes k p))
+| JTUnpack : forall H t' t k p,
+  jobj v H (JT t' t (KRes k p)) ->
+  jobj v H (JT t' t k)
 (* props (logic) *)
-| JPeq : forall H Y0 Y1 p p',
-  jobj v H (JP Y0 Y1 p) ->
-  jeq p p' CProp ->
-  (mE v -> jobj v H (Jwf p' CProp)) ->
-  jobj v H (JP Y0 Y1 p')
+| JPeq : forall H Y0 Y1 p' p,
+  jobj v H (JP Y0 Y1 p') ->
+  jobj v H (Jwf p' p CProp) ->
+  jobj v H (JP Y0 Y1 p)
 | JPVar : forall H Y0 Y1 n p,
   cobj H CTEnv ->
   cobj Y0 CPEnv ->
@@ -805,29 +774,29 @@ Inductive jobj v : tenv -> judg -> Prop :=
 | JPExi : forall H Y0 Y1 t k,
   cobj Y0 CPEnv ->
   cobj Y1 CPEnv ->
-  jobj v H (JT t k) ->
+  jobj v H (JT t t k) ->
   jobj v H (JP Y0 Y1 (PExi k))
 | JPForIntro : forall H Y0 Y1 k p,
-  (mE v -> jobj v H (Jwf k CKind)) ->
+  (mE v -> jobj v H (Jwf k k CKind)) ->
   jobj v (HCons H k) (JP (lift 1 0 Y0) (lift 1 0 Y1) p) ->
   jobj v H (JP Y0 Y1 (PFor k p))
 | JPForElim : forall H Y0 Y1 t k p,
-  jobj v H (JT t k) ->
+  jobj v H (JT t t k) ->
   jobj v H (JP Y0 Y1 (PFor k p)) ->
   jobj v H (JP Y0 Y1 (subst t 0 p))
 | JPRes : forall H Y0 Y1 t k p,
   cobj Y0 CPEnv ->
   cobj Y1 CPEnv ->
-  jobj v H (JT t (KRes k p)) ->
+  jobj v H (JT t t (KRes k p)) ->
   jobj v H (JP Y0 Y1 (subst t 0 p))
 | JPFix : forall H Y0 Y1 p,
-  (mE v -> jobj v H (Jwf p CProp)) ->
+  (mE v -> jobj v H (Jwf p p CProp)) ->
   jobj v H (JP Y0 (YCons Y1 p) p) ->
   mR v -> jobj v H (JP Y0 Y1 p)
 | JPCoer : forall H Y0 Y1 H' HH' t' t,
   Happ H H' HH' ->
   jobj v H (JC Y0 Y1 H' t' t) ->
-  jobj v HH' (JT t' KStar) ->
+  jobj v HH' (JT t' t' KStar) ->
   jobj v H (JP Y0 Y1 (PCoer H' t' t))
 (* props (coercions) *)
 | JCProp : forall H Y0 Y1 H' t' t,
@@ -852,81 +821,81 @@ Inductive jobj v : tenv -> judg -> Prop :=
   Yapp Y0 Y1 Y0Y1 ->
   Happ H H' HH' ->
   (mS v -> jobj v H (JH H')) ->
-  (mS v -> jobj v HH' (JT t' KStar)) ->
-  (mS v -> jobj v HH' (JT s' KStar)) ->
-  (mE v -> jobj v H (JT t KStar)) ->
+  (mS v -> jobj v HH' (JT t' t' KStar)) ->
+  (mS v -> jobj v HH' (JT s' s' KStar)) ->
+  (mE v -> jobj v H (JT t t KStar)) ->
   jobj v HH' (JC (lift (Hlength H') 0 Y0Y1) YNil HNil (lift (Hlength H') 0 t) t') ->
   jobj v H (JC Y0Y1 YNil H' s' s) ->
   jobj v H (JC Y0 Y1 H' (TArr t' s') (TArr t s))
-| JCProd : forall H H' HH' Y0 Y1 t' s' t s Y0Y1,
-  Yapp Y0 Y1 Y0Y1 ->
-  Happ H H' HH' ->
-  (mS v -> jobj v H (JH H')) ->
-  (mS v -> jobj v HH' (JT t' KStar)) ->
-  (mS v -> jobj v HH' (JT s' KStar)) ->
-  jobj v H (JC Y0Y1 YNil H' t' t) ->
-  jobj v H (JC Y0Y1 YNil H' s' s) ->
-  jobj v H (JC Y0 Y1 H' (TProd t' s') (TProd t s))
-| JCSum : forall H H' HH' Y0 Y1 t' s' t s Y0Y1,
-  Yapp Y0 Y1 Y0Y1 ->
-  Happ H H' HH' ->
-  (mS v -> jobj v H (JH H')) ->
-  (mS v -> jobj v HH' (JT t' KStar)) ->
-  (mS v -> jobj v HH' (JT s' KStar)) ->
-  jobj v H (JC Y0Y1 YNil H' t' t) ->
-  jobj v H (JC Y0Y1 YNil H' s' s) ->
-  jobj v H (JC Y0 Y1 H' (TSum t' s') (TSum t s))
-| JCPi : forall H H' HH' HaH' Y0 Y1 k k' s' t' t Y0Y1,
-  Yapp Y0 Y1 Y0Y1 ->
-  Happ H H' HH' ->
-  Happ (HCons H k) (lift 1 0 H') HaH' ->
-  (mE v -> jobj v H (Jwf k CKind)) ->
-  jobj v H (JH H') ->
-  (mS v -> jobj v (HCons HH' k') (JT t' KStar)) ->
-  jobj v HaH' (JT s' (lift 1 (Hlength H') k')) ->
-  jobj v (HCons H k) (JC (lift 1 0 Y0Y1) YNil
-                         (lift 1 0 H') (subst s' 0 (lift 1 (1 + Hlength H') t')) t) ->
-  jobj v H (JC Y0 Y1 H' (TPi k' t') (TPi k t))
-| JCGen : forall H Y0 Y1 k t,
-  cobj Y0 CPEnv ->
-  cobj Y1 CPEnv ->
-  cobj t CType ->
-  jobj v H (JK k) ->
-  (mS v -> jobj v (HCons H k) (JT t KStar)) ->
-  jobj v H (JC Y0 Y1 (HCons HNil k) t (TFor k t))
-| JCInst : forall H Y0 Y1 k t s,
-  cobj Y0 CPEnv ->
-  cobj Y1 CPEnv ->
-  cobj t CType ->
-  (mS v -> jobj v (HCons H k) (JT t KStar)) ->
-  jobj v H (JT s k) ->
-  jobj v H (JC Y0 Y1 HNil (TFor k t) (subst s 0 t))
-| JCUnfold : forall H Y0 Y1 t,
-  cobj H CTEnv ->
-  cobj Y0 CPEnv ->
-  cobj Y1 CPEnv ->
-  cobj t CType ->
-  (mS v -> jrec 0 t WF) ->
-  (mS v -> jobj v (HCons H KStar) (JT t KStar)) ->
-  mR v -> jobj v H (JC Y0 Y1 HNil (TMu t) (subst (TMu t) 0 t))
-| JCFold : forall H Y0 Y1 t,
-  cobj Y0 CPEnv ->
-  cobj Y1 CPEnv ->
-  jrec 0 t WF ->
-  jobj v (HCons H KStar) (JT t KStar) ->
-  mR v -> jobj v H (JC Y0 Y1 HNil (subst (TMu t) 0 t) (TMu t))
+(* | JCProd : forall H H' HH' Y0 Y1 t' s' t s Y0Y1, *)
+(*   Yapp Y0 Y1 Y0Y1 -> *)
+(*   Happ H H' HH' -> *)
+(*   (mS v -> jobj v H (JH H')) -> *)
+(*   (mS v -> jobj v HH' (JT t' KStar)) -> *)
+(*   (mS v -> jobj v HH' (JT s' KStar)) -> *)
+(*   jobj v H (JC Y0Y1 YNil H' t' t) -> *)
+(*   jobj v H (JC Y0Y1 YNil H' s' s) -> *)
+(*   jobj v H (JC Y0 Y1 H' (TProd t' s') (TProd t s)) *)
+(* | JCSum : forall H H' HH' Y0 Y1 t' s' t s Y0Y1, *)
+(*   Yapp Y0 Y1 Y0Y1 -> *)
+(*   Happ H H' HH' -> *)
+(*   (mS v -> jobj v H (JH H')) -> *)
+(*   (mS v -> jobj v HH' (JT t' KStar)) -> *)
+(*   (mS v -> jobj v HH' (JT s' KStar)) -> *)
+(*   jobj v H (JC Y0Y1 YNil H' t' t) -> *)
+(*   jobj v H (JC Y0Y1 YNil H' s' s) -> *)
+(*   jobj v H (JC Y0 Y1 H' (TSum t' s') (TSum t s)) *)
+(* | JCPi : forall H H' HH' HaH' Y0 Y1 k k' s' t' t Y0Y1, *)
+(*   Yapp Y0 Y1 Y0Y1 -> *)
+(*   Happ H H' HH' -> *)
+(*   Happ (HCons H k) (lift 1 0 H') HaH' -> *)
+(*   (mE v -> jobj v H (Jwf k CKind)) -> *)
+(*   jobj v H (JH H') -> *)
+(*   (mS v -> jobj v (HCons HH' k') (JT t' KStar)) -> *)
+(*   jobj v HaH' (JT s' (lift 1 (Hlength H') k')) -> *)
+(*   jobj v (HCons H k) (JC (lift 1 0 Y0Y1) YNil *)
+(*                          (lift 1 0 H') (subst s' 0 (lift 1 (1 + Hlength H') t')) t) -> *)
+(*   jobj v H (JC Y0 Y1 H' (TPi k' t') (TPi k t)) *)
+(* | JCGen : forall H Y0 Y1 k t, *)
+(*   cobj Y0 CPEnv -> *)
+(*   cobj Y1 CPEnv -> *)
+(*   cobj t CType -> *)
+(*   jobj v H (JK k) -> *)
+(*   (mS v -> jobj v (HCons H k) (JT t KStar)) -> *)
+(*   jobj v H (JC Y0 Y1 (HCons HNil k) t (TFor k t)) *)
+(* | JCInst : forall H Y0 Y1 k t s, *)
+(*   cobj Y0 CPEnv -> *)
+(*   cobj Y1 CPEnv -> *)
+(*   cobj t CType -> *)
+(*   (mS v -> jobj v (HCons H k) (JT t KStar)) -> *)
+(*   jobj v H (JT s k) -> *)
+(*   jobj v H (JC Y0 Y1 HNil (TFor k t) (subst s 0 t)) *)
+(* | JCUnfold : forall H Y0 Y1 t, *)
+(*   cobj H CTEnv -> *)
+(*   cobj Y0 CPEnv -> *)
+(*   cobj Y1 CPEnv -> *)
+(*   cobj t CType -> *)
+(*   (mS v -> jrec 0 t WF) -> *)
+(*   (mS v -> jobj v (HCons H KStar) (JT t KStar)) -> *)
+(*   mR v -> jobj v H (JC Y0 Y1 HNil (TMu t) (subst (TMu t) 0 t)) *)
+(* | JCFold : forall H Y0 Y1 t, *)
+(*   cobj Y0 CPEnv -> *)
+(*   cobj Y1 CPEnv -> *)
+(*   jrec 0 t WF -> *)
+(*   jobj v (HCons H KStar) (JT t KStar) -> *)
+(*   mR v -> jobj v H (JC Y0 Y1 HNil (subst (TMu t) 0 t) (TMu t)) *)
 | JCTop : forall H Y0 Y1 t,
   cobj H CTEnv ->
   cobj Y0 CPEnv ->
   cobj Y1 CPEnv ->
   cobj t CType ->
-  (mS v -> jobj v H (JT t KStar)) ->
+  (mS v -> jobj v H (JT t t KStar)) ->
   jobj v H (JC Y0 Y1 HNil t TTop)
-| JCBot : forall H Y0 Y1 t,
-  cobj Y0 CPEnv ->
-  cobj Y1 CPEnv ->
-  jobj v H (JT t KStar) ->
-  jobj v H (JC Y0 Y1 HNil TBot t)
+(* | JCBot : forall H Y0 Y1 t, *)
+(*   cobj Y0 CPEnv -> *)
+(*   cobj Y1 CPEnv -> *)
+(*   jobj v H (JT t KStar) -> *)
+(*   jobj v H (JC Y0 Y1 HNil TBot t) *)
 (* tenvs *)
 | JHNil : forall H,
   cobj H CTEnv ->
@@ -942,56 +911,57 @@ Inductive jobj v : tenv -> judg -> Prop :=
   jobj v H (JG GNil)
 | JGCons : forall H G t,
   jobj v H (JG G) ->
-  jobj v H (JT t KStar) ->
+  jobj v H (JT t t KStar) ->
   jobj v H (JG (GCons G t))
 (* well-formedness *)
 | WKStar : forall H,
   cobj H CTEnv ->
-  jobj v H (Jwf KStar CKind)
+  jobj v H (Jwf KStar KStar CKind)
 | WKOne : forall H,
   cobj H CTEnv ->
-  jobj v H (Jwf KOne CKind)
-| WKProd : forall H k1 k2,
-  jobj v H (Jwf k1 CKind) ->
-  jobj v H (Jwf k2 CKind) ->
-  jobj v H (Jwf (KProd k1 k2) CKind)
-| WKRes : forall H k p,
-  jobj v H (Jwf k CKind) ->
-  jobj v (HCons H k) (Jwf p CProp) ->
-  jobj v H (Jwf (KRes k p) CKind)
+  jobj v H (Jwf KOne KOne CKind)
+| WKProd : forall H k1' k2' k1 k2,
+  jobj v H (Jwf k1' k1 CKind) ->
+  jobj v H (Jwf k2' k2 CKind) ->
+  jobj v H (Jwf (KProd k1' k2') (KProd k1 k2) CKind)
+| WKRes : forall H k' k p' p,
+  jobj v H (Jwf k' k CKind) ->
+  jobj v (HCons H k) (Jwf p' p CProp) ->
+  jobj v H (Jwf (KRes k' p') (KRes k p) CKind)
 | WPTrue : forall H,
   cobj H CTEnv ->
-  jobj v H (Jwf PTrue CProp)
-| WPAnd : forall H p1 p2,
-  jobj v H (Jwf p1 CProp) ->
-  jobj v H (Jwf p2 CProp) ->
-  jobj v H (Jwf (PAnd p1 p2) CProp)
-| WPCoer : forall H H' HH' t' t,
-  Happ H H' HH' ->
-  jobj v H (JH H') ->
-  jobj v HH' (JT t' KStar) ->
-  jobj v H (JT t KStar) ->
-  jobj v H (Jwf (PCoer H' t' t) CProp)
-| WPExi : forall H k,
-  jobj v H (Jwf k CKind) ->
-  jobj v H (Jwf (PExi k) CProp)
-| WPFor : forall H k p,
-  jobj v H (Jwf k CKind) ->
-  jobj v (HCons H k) (Jwf p CProp) ->
-  jobj v H (Jwf (PFor k p) CProp)
+  jobj v H (Jwf PTrue PTrue CProp)
+| WPAnd : forall H p1' p2' p1 p2,
+  jobj v H (Jwf p1' p1 CProp) ->
+  jobj v H (Jwf p2' p2 CProp) ->
+  jobj v H (Jwf (PAnd p1' p2') (PAnd p1 p2) CProp)
+| WPCoer : forall H H1 H2 HH1 t' s' t s,
+  Happ H H1 HH1 ->
+  jobj v H (Jwf H2 H1 CTEnv) ->
+  jobj v H (JH H1) ->
+  jobj v HH1 (JT t' t KStar) ->
+  jobj v H (JT s' s KStar) ->
+  jobj v H (Jwf (PCoer H2 t' s') (PCoer H1 t s) CProp)
+| WPExi : forall H k' k,
+  jobj v H (Jwf k' k CKind) ->
+  jobj v H (Jwf (PExi k') (PExi k) CProp)
+| WPFor : forall H k' k p' p,
+  jobj v H (Jwf k' k CKind) ->
+  jobj v (HCons H k) (Jwf p' p CProp) ->
+  jobj v H (Jwf (PFor k' p') (PFor k p) CProp)
 | WHNil : forall H,
   cobj H CTEnv ->
-  jobj v H (Jwf HNil CTEnv)
-| WHCons : forall H H' HH' k',
-  Happ H H' HH' ->
-  jobj v H (Jwf H' CTEnv) ->
-  jobj v HH' (Jwf k' CKind) ->
-  jobj v H (Jwf (HCons H' k') CTEnv)
+  jobj v H (Jwf HNil HNil CTEnv)
+| WHCons : forall H H1 H2 HH1 k' k,
+  Happ H H1 HH1 ->
+  jobj v H (Jwf H2 H1 CTEnv) ->
+  jobj v HH1 (Jwf k' k CKind) ->
+  jobj v H (Jwf (HCons H2 k') (HCons H1 k) CTEnv)
 | WYNil : forall H,
   cobj H CTEnv ->
-  jobj v H (Jwf YNil CPEnv)
-| WYCons : forall H Y p,
-  jobj v H (Jwf Y CPEnv) ->
-  jobj v H (Jwf p CProp) ->
-  jobj v H (Jwf (YCons Y p) CPEnv)
+  jobj v H (Jwf YNil YNil CPEnv)
+| WYCons : forall H Y' Y p' p,
+  jobj v H (Jwf Y' Y CPEnv) ->
+  jobj v H (Jwf p' p CProp) ->
+  jobj v H (Jwf (YCons Y' p') (YCons Y p) CPEnv)
 .

@@ -50,7 +50,7 @@
   % \branch {\TPi \tva \ka \ta}
   % \branch {\TMu \tva \ta}
   % \branch {\TBot}
-  % \branch {\TTop}
+  \branch {\TTop}
 }\\
 \entry[Props]{\Pa}{
   \branch {\PTrue}
@@ -161,9 +161,42 @@
 \begin{mathpar}
 \infer[JTeq]{%
   \Ex \Ta \JT \Ha \tap \ta \kap \\
-  \modE{\Ex \Ka \Jwf \Ha \kap \ka}
+  \Ex \Ka \Jwf \Ha \kap \ka
 }{%
   \Ex {\teq \Ta \Ka} \JT \Ha \tap \ta \ka
+}
+
+\infer[JTsym]{%
+  \JT \Ha \ta \tap \ka
+}{%
+  \JT \Ha \tap \ta \ka
+}
+
+\infer[JTtrans]{%
+  \JT \Ha \tai \taii \ka \\
+  \JT \Ha \taii \taiii \ka
+}{%
+  \JT \Ha \tai \taiii \ka
+}
+
+\infer[JTBFst]{%
+  \JT \Ha \ta \ta \KStar \\
+  \JT \Ha \tb \tb \KStar
+}{%
+  \JT \Ha {\TFst {\TPair \ta \tb}} \ta \KStar
+}
+
+\infer[JTBSnd]{%
+  \JT \Ha \ta \ta \KStar \\
+  \JT \Ha \tb \tb \KStar
+}{%
+  \JT \Ha {\TSnd {\TPair \ta \tb}} \tb \KStar
+}
+
+\infer[JTEProd]{%
+  \JT \Ha \ta \ta \KProd \kai \kaii
+}{%
+  \JT \Ha \ta {\TPair {\TFst \ta} {\TSnd \ta}} \KProd \kai \kaii
 }
 
 \infer[JTVar]{%
@@ -225,10 +258,10 @@
 % \infer[JTBot]{}{%
 %   \Ex \TBot \JT \Ha \TBot \KStar
 % }
-%
-% \infer[JTTop]{}{%
-%   \Ex \TTop \JT \Ha \TTop \KStar
-% }
+
+\infer[JTTop]{}{%
+  \Ex \TTop \JT \Ha \TTop \TTop \KStar
+}
 
 \infer[JTUnit]{}{%
   \Ex \TUnit \JT \Ha \TUnit \TUnit \KOne
@@ -275,7 +308,7 @@
 \begin{mathpar}
 \infer[JPeq]{%
   \Ex \pa \JP \Ha \Yao \Yai \Pap \\
-  \modE{\Ex \Qa \Jwf \Ha \Pap \Pa}
+  \Ex \Qa \Jwf \Ha \Pap \Pa
 }{%
   \Ex {\peq \pa \Qa} \JP \Ha \Yao \Yai \Pa
 }
@@ -454,12 +487,12 @@
 %   \modR{\Ex {\gFold \tva \Ta}
 %         \JC \Ha \Yao \Yai \HNil {\Subst \ta \tva {\TMu \tva \ta}} {\TMu \tva \ta}}
 % }
-%
-% \infer[JCTop]{%
-%   \modS{\JT \Ha \ta \KStar}
-% }{%
-%   \Ex \gTop \JC \Ha \Yao \Yai \HNil \ta \TTop
-% }
+
+\infer[JCTop]{%
+  \modS{\JT \Ha \ta \ta \KStar}
+}{%
+  \Ex \gTop \JC \Ha \Yao \Yai \HNil \ta \TTop
+}
 %
 % \infer[JCBot]{%
 %   \Ex \Ta \JT \Ha \ta \KStar
@@ -724,7 +757,7 @@ $\sem{\TArr \ta \tb}\eta$ & $\TArr{\sem\ta\eta}{\sem\tb\eta}$ \\
 % $\sem{\TMu \tva \ta}\eta$ & $\mu (\lambda x \mapsto \sem\ta{\eta, \tva
 %   \mapsto x})$ \\
 % $\sem\TBot\eta$ & $\TBot$ \\
-% $\sem\TTop\eta$ & $\TTop$ \\[.5em]
+$\sem\TTop\eta$ & $\TTop$ \\[.5em]
 $\sem\TUnit\eta$ & $\TUnit$ \\
 $\sem{\TPair \ta \tb}\eta$ & $\TPair {\sem\ta\eta} {\sem\tb\eta}$ \\
 $\sem{\TFst \ta}\eta$ & $\TFst {\sem\ta\eta}$ \\
@@ -786,7 +819,7 @@ $\JP \Ha \Yao \Yai \Pa$ &
   \Yai$ then $\Jwf \Ha \Pa \Pa$ \\
 $\JC \Ha \Yao \Yai \Hap \ta \tb$ &
   if $\Jwf \HNil \Ha \Ha$, $\Jwf \Ha \Yao \Yao$, and $\Jwf \Ha \Yai \Yai$ then \\
-  & $\JH \Ha \Hap \Hap$ and
+  & $\JH \Ha \Hap$ and
   if $\JT {\Happ \Ha \Hap} \ta \ta \KStar$ then $\JT \Ha \tb \tb \KStar$ \\
 $\JH \Ha \Hap$ & $\Jwf \Ha \Hap \Hap$ \\
 $\JG \Ha \Ga$ & nothing \\

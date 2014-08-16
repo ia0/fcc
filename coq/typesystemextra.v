@@ -88,58 +88,24 @@ pose proof (IHYapp H3) as [? ?].
 auto using cobj.
 Qed.
 
-Lemma jeq_Hlength : forall {H1 H2}, jeq H1 H2 CTEnv -> Hlength H1 = Hlength H2.
+Lemma jeq_Hlength : forall {v H H1 H2}, jobj v H (Jwf H1 H2 CTEnv) -> Hlength H1 = Hlength H2.
 Proof.
-intros H1 H2 Hjeq.
-remember CTEnv as c.
-induction Hjeq; simpl; subst; try inversion Heqc.
-(* EQrefl *) reflexivity.
-(* EQsym *) apply eq_sym; auto.
-(* EQtrans *) apply eq_trans with (Hlength o2); auto.
-(* EQcongrHCons *) f_equal; auto.
-Qed.
-
-Lemma jeq_lift : forall {o1 o2 c}, jeq o1 o2 c ->
-  forall d i, jeq (lift d i o1) (lift d i o2) c.
-Proof.
-induction 1; simpl; intros;
-try match goal with
-  | H : jeq _ _ CTEnv |- _ => repeat rewrite (jeq_Hlength H); clear H
-end; eauto using jeq, cobj_lift.
-Qed.
-
-Lemma jeq_subst : forall {o1 o2 c}, jeq o1 o2 c ->
-  forall s i, cobj s CType -> jeq (subst s i o1) (subst s i o2) c.
-Proof.
-induction 1; simpl; intros;
-try match goal with
-  | H : jeq _ _ CTEnv |- _ => repeat rewrite (jeq_Hlength H); clear H
-end; eauto using jeq, cobj_lift, cobj_subst.
-Qed.
-
-Lemma jeq_class : forall {o1 o2 c}, jeq o1 o2 c -> cobj o1 c /\ cobj o2 c.
-Proof.
-induction 1; repeat
-match goal with
-  | H : jeq _ _ _ |- _ => clear H
-  | H : _ /\ _ |- _ => destruct H
-end; repeat
-match goal with
-  | H : ?P |- ?P => exact H
-  | |- _ /\ _ => split
-end; auto using cobj.
+intros v H H1 H2 Hjeq.
+remember (Jwf H1 H2 CTEnv) as c.
+generalize dependent H2; generalize dependent H1.
+induction Hjeq; intros ? ? Heqc; try inversion Heqc; simpl; auto.
 Qed.
 
 Definition classjudg J :=
   match J with
     | JK k => cobj k CKind
-    | JT t k => cobj t CType /\ cobj k CKind
+    | JT t' t k => cobj t' CType /\ cobj t CType /\ cobj k CKind
     | JP Y0 Y1 p => cobj Y0 CPEnv /\ cobj Y1 CPEnv /\ cobj p CProp
     | JC Y0 Y1 H' t' t => cobj Y0 CPEnv /\ cobj Y1 CPEnv
                        /\ cobj H' CTEnv /\ cobj t' CType /\ cobj t CType
     | JH H' => cobj H' CTEnv
     | JG G => cobj G CAEnv
-    | Jwf o c => cobj o c
+    | Jwf o' o c => cobj o' c /\ cobj o c
   end.
 Hint Unfold classjudg.
 
@@ -148,7 +114,6 @@ Proof.
 Ltac destruct_class :=
 match goal with
   | H : jobj _ _ _ |- _ => clear H
-  | H : jeq _ _ _ |- _ => destruct (jeq_class H); clear H
   | H : _ /\ _ |- _ => destruct H
 end.
 Ltac inversion_class :=
@@ -159,10 +124,10 @@ match goal with
   | H : cobj (KRes _ _) _ |- _ => inversion H; clear H; subst
   | H : cobj (TVar _) _ |- _ => clear H
   | H : cobj (TArr _ _) _ |- _ => inversion H; clear H; subst
-  | H : cobj (TProd _ _) _ |- _ => inversion H; clear H; subst
-  | H : cobj (TFor _ _) _ |- _ => inversion H; clear H; subst
-  | H : cobj (TPi _ _) _ |- _ => inversion H; clear H; subst
-  | H : cobj (TMu _) _ |- _ => inversion H; clear H; subst
+  (* | H : cobj (TProd _ _) _ |- _ => inversion H; clear H; subst *)
+  (* | H : cobj (TFor _ _) _ |- _ => inversion H; clear H; subst *)
+  (* | H : cobj (TPi _ _) _ |- _ => inversion H; clear H; subst *)
+  (* | H : cobj (TMu _) _ |- _ => inversion H; clear H; subst *)
   | H : cobj TUnit _ |- _ => clear H
   | H : cobj (TPair _ _) _ |- _ => inversion H; clear H; subst
   | H : cobj (TFst _) _ |- _ => inversion H; clear H; subst
@@ -185,6 +150,8 @@ match goal with
     pose proof (Hnth_cobj H1 H2); clear H1
   | H1 : Ynth ?Y _ _, H2 : cobj ?Y CPEnv |- _ =>
     pose proof (Ynth_cobj H1 H2); clear H1
+  | Hx : Happ ?H1 ?H2 ?H1H2, Hy : cobj ?H1H2 CTEnv |- _ =>
+    pose proof (Happ_cobj_rev Hx Hy) as [? ?]; clear Hx
   | Hx : Happ ?H1 ?H2 ?H1H2, Hy1 : cobj ?H1 CTEnv, Hy2 : cobj ?H2 CTEnv |- _ =>
     pose proof (Happ_cobj Hx Hy1 Hy2); clear Hx
   | Hx : Yapp ?Y1 ?Y2 ?Y1Y2, Hy : cobj ?Y1Y2 CPEnv |- _ =>
@@ -327,19 +294,19 @@ Lemma jrec_lift : forall {d a t rec},
 Proof.
 induction 1; simpl; intros; eauto using jrec.
 (* RECVar *) subst_lift_var; eauto using jrec.
-(* RECFor *)
-  apply RECFor with (lift d (a + i) k'); [|apply IHjrec].
-  subst k; unfold shift.
-  rewrite lift_lift with (d1:=1); [|omega].
-  f_equal; omega.
-(* RECPi *)
-  apply RECPi with (lift d (a + i) k'); [|apply IHjrec].
-  subst k; unfold shift.
-  rewrite lift_lift with (d1:=1); [|omega].
-  f_equal; omega.
-(* RECMu *)
-  apply RECMu; auto.
-  apply IHjrec2.
+(* (* RECFor *) *)
+(*   apply RECFor with (lift d (a + i) k'); [|apply IHjrec]. *)
+(*   subst k; unfold shift. *)
+(*   rewrite lift_lift with (d1:=1); [|omega]. *)
+(*   f_equal; omega. *)
+(* (* RECPi *) *)
+(*   apply RECPi with (lift d (a + i) k'); [|apply IHjrec]. *)
+(*   subst k; unfold shift. *)
+(*   rewrite lift_lift with (d1:=1); [|omega]. *)
+(*   f_equal; omega. *)
+(* (* RECMu *) *)
+(*   apply RECMu; auto. *)
+(*   apply IHjrec2. *)
 (* RECwf *)
   subst; unfold shift.
   replace (a + 1 + i) with (a + i + 1) by omega.
@@ -356,19 +323,19 @@ Lemma jrec_subst : forall {s a t rec}, cobj s CType ->
 Proof.
 induction 2; simpl; intros; eauto using jrec.
 (* RECVar *) subst_lift_var; eauto using jrec.
-(* RECFor *)
-  apply RECFor with (subst s (a + i) k'); [|apply IHjrec].
-  subst k; unfold shift.
-  rewrite lift_subst2; [|auto|omega].
-  f_equal; omega.
-(* RECPi *)
-  apply RECPi with (subst s (a + i) k'); [|apply IHjrec].
-  subst k; unfold shift.
-  rewrite lift_subst2; [|auto|omega].
-  f_equal; omega.
-(* RECMu *)
-  apply RECMu; auto.
-  apply IHjrec2.
+(* (* RECFor *) *)
+(*   apply RECFor with (subst s (a + i) k'); [|apply IHjrec]. *)
+(*   subst k; unfold shift. *)
+(*   rewrite lift_subst2; [|auto|omega]. *)
+(*   f_equal; omega. *)
+(* (* RECPi *) *)
+(*   apply RECPi with (subst s (a + i) k'); [|apply IHjrec]. *)
+(*   subst k; unfold shift. *)
+(*   rewrite lift_subst2; [|auto|omega]. *)
+(*   f_equal; omega. *)
+(* (* RECMu *) *)
+(*   apply RECMu; auto. *)
+(*   apply IHjrec2. *)
 (* RECwf *)
   subst; unfold shift.
   replace (a + 1 + i) with (1 + (a + i)) by omega.
@@ -498,89 +465,96 @@ Lemma jobj_lift : forall {H1 H2 H1H2}, Happ H1 H2 H1H2 -> cobj H1H2 CTEnv ->
   jobj v H1H2H3 (jlift (Hlength H2) (Hlength H3) j).
 Proof.
 induction 3; simpl in *; intros.
-(* 62: JKexi *)
+{ (* JKexi *)
   apply JKexi.
   { apply IHjobj; auto. }
-  intros mEv; apply (H6 mEv); auto.
-(* 61: JTeq *)
-  apply JTeq with (lift (Hlength H2) (Hlength H8) k); auto.
-  apply (jeq_lift H5).
-(* 60: JTVar *)
+  intros mEv; apply (H6 mEv); auto. }
+{ (* JTeq *)
+  apply JTeq with (lift (Hlength H2) (Hlength H4) k'); auto. }
+{ (* JTsym *)
+  apply JTsym; auto. }
+{ (* JTtrans *)
+  apply JTtrans with (lift (Hlength H2) (Hlength H4) t2); auto. }
+{ (* JTBFst *)
+  apply JTBFst with (lift (Hlength H2) (Hlength H4) k2); auto. }
+{ (* JTBSnd *)
+  apply JTBSnd with (lift (Hlength H2) (Hlength H4) k1); auto. }
+{ (* JTEProd *)
+  apply JTEProd; auto. }
+{ (* JTVar *)
   subst_lift_var.
-  (* 5: Hlength H6 <= a *)
+  { (* Hlength H6 <= a *)
     rewrite lift_fusion; [|omega..].
     rewrite <- plus_n_Sm.
     apply JTVar; eauto using Happ_cobj, cobj_lift.
     destruct (Happ_cobj_rev H H0).
-    eapply Hnth_lift; eauto.
-  (* 4: Hlength H6 > a *)
+    eapply Hnth_lift; eauto. }
+  { (* Hlength H6 > a *)
     remember (Hlength H6 - (1 + a)) as b.
     replace (Hlength H6) with (1 + a + b) by (subst b; omega).
     rewrite <- lift_lift_0.
     apply JTVar; eauto using Happ_cobj, cobj_lift.
     subst b.
-    eapply Hnth_Happ_lift; eauto.
-(* 59: JTArr *) apply JTArr; auto.
-(* 58: JTOne *)
-  apply JTOne; auto.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 57: JTProd *) apply JTProd; auto.
-(* 58: JTVoid *)
-  apply JTVoid; auto.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 55: JTSum *) apply JTSum; auto.
-(* 54: JTFor *)
-  apply JTFor; auto.
-  apply (IHjobj (HCons H7 k)); simpl; eauto using Happ.
-  destruct (jobj_class H6).
-  inversion H11; clear H11; subst.
-  auto using cobj.
-  rewrite plus_0_r; auto using Happ.
-(* 53: JTPi *)
-  apply JTPi; auto.
-  apply (IHjobj (HCons H7 k)); simpl; eauto using Happ.
-  destruct (jobj_class H6).
-  inversion H11; clear H11; subst.
-  auto using cobj.
-  rewrite plus_0_r; auto using Happ.
-(* 52: JTMu *)
-  apply JTMu; auto using jrec_lift_0.
-  apply (IHjobj (HCons H7 KStar)); simpl; eauto using Happ, cobj.
-(* 51: JTBot *)
-  apply JTBot.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 50: JTTop *)
+    eapply Hnth_Happ_lift; eauto. } }
+{ (* JTArr *) apply JTArr; auto. }
+(* (* 58: JTOne *) *)
+(*   apply JTOne; auto. *)
+(*   apply (Happ_cobj H8); auto using cobj_lift. *)
+(* (* 57: JTProd *) apply JTProd; auto. *)
+(* (* 58: JTVoid *) *)
+(*   apply JTVoid; auto. *)
+(*   apply (Happ_cobj H8); auto using cobj_lift. *)
+(* (* 55: JTSum *) apply JTSum; auto. *)
+(* (* 54: JTFor *) *)
+(*   apply JTFor; auto. *)
+(*   apply (IHjobj (HCons H7 k)); simpl; eauto using Happ. *)
+(*   destruct (jobj_class H6). *)
+(*   inversion H11; clear H11; subst. *)
+(*   auto using cobj. *)
+(*   rewrite plus_0_r; auto using Happ. *)
+(* (* 53: JTPi *) *)
+(*   apply JTPi; auto. *)
+(*   apply (IHjobj (HCons H7 k)); simpl; eauto using Happ. *)
+(*   destruct (jobj_class H6). *)
+(*   inversion H11; clear H11; subst. *)
+(*   auto using cobj. *)
+(*   rewrite plus_0_r; auto using Happ. *)
+(* (* 52: JTMu *) *)
+(*   apply JTMu; auto using jrec_lift_0. *)
+(*   apply (IHjobj (HCons H7 KStar)); simpl; eauto using Happ, cobj. *)
+(* (* 51: JTBot *) *)
+(*   apply JTBot. *)
+(*   apply (Happ_cobj H8); auto using cobj_lift. *)
+{ (* JTTop *)
   apply JTTop.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 49: JTUnit *)
+  apply (Happ_cobj H8); auto using cobj_lift. }
+{ (* JTUnit *)
   apply JTUnit.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 48: JTPair *) apply JTPair; auto.
-(* 47: JTFst *) eapply JTFst; eauto.
-(* 46: JTSnd *) eapply JTSnd; eauto.
-(* 45: JTPack *)
-  destruct (jobj_class H3_) as [_ [? ?]].
+  apply (Happ_cobj H8); auto using cobj_lift. }
+{ (* JTPair *) apply JTPair; auto. }
+{ (* JTFst *) eapply JTFst; eauto. }
+{ (* JTSnd *) eapply JTSnd; eauto. }
+{ (* JTPack *)
+  destruct (jobj_class H3_) as [_ [? [? ?]]].
   apply JTPack; auto.
-  (* +3: *)
-    intros mEv.
+  { intros mEv.
     apply (H5 mEv (HCons H6 k)); simpl; auto using Happ, cobj.
-    rewrite plus_0_r; apply Happ1; auto.
-  (* +2: *)
-    rewrite <- lift_subst1_0; auto.
-(* 44: JTUnpack *)
-  apply JTUnpack with (lift (Hlength H2) (1 + Hlength H5) p); auto.
-(* 43: JPeq *)
-  apply JPeq with (lift (Hlength H2) (Hlength H8) p); auto using jeq_lift.
-(* 42: JPVar *)
-  apply JPVar with n; eauto using cobj_lift, Happ_cobj, Ynth_lift.
-(* 41: JPTrue *)
-  apply JPTrue; eauto using cobj_lift, Happ_cobj.
-(* 40: JPAndPair *) apply JPAndPair; auto.
-(* 39: JPAndFst *) apply JPAndFst with (lift (Hlength H2) (Hlength H5) p2); auto.
-(* 38: JPAndSnd *) apply JPAndSnd with (lift (Hlength H2) (Hlength H5) p1); auto.
-(* 37: JPExi *)
-  apply JPExi with (lift (Hlength H2) (Hlength H7) t); auto using cobj_lift.
-(* 36: JPForIntro *)
+    rewrite plus_0_r; apply Happ1; auto. }
+  { rewrite <- lift_subst1_0; auto. } }
+{ (* JTUnpack *)
+  apply JTUnpack with (lift (Hlength H2) (1 + Hlength H5) p); auto. }
+{ (* JPeq *)
+  apply JPeq with (lift (Hlength H2) (Hlength H4) p'); auto. }
+{ (* JPVar *)
+  apply JPVar with n; eauto using cobj_lift, Happ_cobj, Ynth_lift. }
+{ (* JPTrue *)
+  apply JPTrue; eauto using cobj_lift, Happ_cobj. }
+{ (* JPAndPair *) apply JPAndPair; auto. }
+{ (* JPAndFst *) apply JPAndFst with (lift (Hlength H2) (Hlength H5) p2); auto. }
+{ (* JPAndSnd *) apply JPAndSnd with (lift (Hlength H2) (Hlength H5) p1); auto. }
+{ (* JPExi *)
+  apply JPExi with (lift (Hlength H2) (Hlength H7) t); auto using cobj_lift. }
+{ (* JPForIntro *)
   apply JPForIntro; auto.
   pose proof (IHjobj (HCons H7 k) (HCons H1H2H3 (lift (Hlength H2) (Hlength H7) k))) as Hx.
   simpl in Hx.
@@ -589,17 +563,17 @@ induction 3; simpl in *; intros.
   inversion H11; clear H11; subst.
   apply Hx; auto using Happ, cobj.
   rewrite plus_0_r.
-  apply Happ1; assumption.
-(* 35: JPForElim *)
+  apply Happ1; assumption. }
+{ (* JPForElim *)
   destruct (jobj_class H3_) as [_ [? _]].
   rewrite lift_subst1_0; auto.
-  apply JPForElim with (lift (Hlength H2) (Hlength H4) k); auto.
-(* 34: JPRes *)
+  apply JPForElim with (lift (Hlength H2) (Hlength H4) k); auto. }
+{ (* JPRes *)
   destruct (jobj_class H6) as [_ [? _]].
   rewrite lift_subst1_0; auto using cobj.
-  apply JPRes with (lift (Hlength H2) (Hlength H7) k); auto using cobj_lift.
-(* 33: JPFix *) apply JPFix; auto.
-(* 32: JPCoer *)
+  apply JPRes with (lift (Hlength H2) (Hlength H7) k); auto using cobj_lift. }
+{ (* JPFix *) apply JPFix; auto. }
+{ (* JPCoer *)
   destruct (jobj_class H3_) as [_ [_ [_ [cH' _]]]].
   destruct (@Happ_exists (lift (Hlength H2) (Hlength H5) H')) with (a := H1H2H3) as [x Hx];
     auto using cobj_lift.
@@ -616,11 +590,11 @@ induction 3; simpl in *; intros.
     (c:=lift (Hlength H2) (Hlength H5) H'); auto using cobj_lift.
   pose proof (Happ_lift Hy (Hlength H2) 0) as c1.
   rewrite plus_0_r in c1.
-  exact c1.
-(* 31: JCProp *) apply JCProp; auto.
-(* 30: JCRefl *)
-  apply JCRefl; eauto using cobj_lift, Happ_cobj.
-(* 29: JCTrans *)
+  exact c1. }
+{ (* JCProp *) apply JCProp; auto. }
+{ (* JCRefl *)
+  apply JCRefl; eauto using cobj_lift, Happ_cobj. }
+{ (* JCTrans *)
   destruct (jobj_class H3_0) as [_ [_ [_ ?]]].
   inversion H12; clear H12; subst.
   destruct (@Happ_exists (lift (Hlength H2) (Hlength H8) H4)) with (a := H1H2H3) as [x Hx];
@@ -641,13 +615,13 @@ induction 3; simpl in *; intros.
   apply Happ_assoc_right with (c := lift (Hlength H2) (Hlength H8) H4)
         (b := lift (Hlength H2) 0 H8) (ab := H1H2H3); auto using cobj_lift.
   pose proof (Happ_lift H12 (Hlength H2) 0) as Hy.
-  rewrite plus_0_r in Hy; exact Hy.
-(* 28: JCWeak *)
+  rewrite plus_0_r in Hy; exact Hy. }
+{ (* JCWeak *)
   apply JCWeak with (H' := lift (Hlength H2) (Hlength H5) H').
   rewrite Hlength_lift.
   rewrite lift_lift_0.
-  auto.
-(* 27: JCArr *)
+  auto. }
+{ (* JCArr *)
   destruct (jobj_class H3_0) as [_ [_ [_ cH's]]].
   inversion cH's; clear cH's; subst.
   destruct (@Happ_exists (lift (Hlength H2) (Hlength H14) H')) with (a := H1H2H3) as [x Hx];
@@ -670,168 +644,168 @@ induction 3; simpl in *; intros.
     rewrite <- Heqy.
     apply IHjobj1; auto. }
   { rewrite Heqy.
-    apply IHjobj2; auto. }
-(* 26: JCProd *)
-  destruct (jobj_class H3_0) as [_ [_ [_ cH's]]].
-  inversion cH's; clear cH's; subst.
-  destruct (@Happ_exists (lift (Hlength H2) (Hlength H12) H')) with (a := H1H2H3) as [x Hx];
-    auto using cobj_lift.
-  destruct (@Happ_exists H') with (a := H12) as [y Hy]; auto.
-  pose proof (Hlength_Happ Hy) as Heqy.
-  replace (Hlength H12 + Hlength H') with (Hlength H' + Hlength H12) in Heqy by omega.
-  rewrite <- Heqy.
-  assert (Happ H1 y HH') by (eapply Happ_assoc_right; eauto).
-  assert (cobj y CTEnv) by (eapply Happ_cobj; eauto).
-  pose proof (Happ_lift Hy (Hlength H2) 0) as Hyl.
-  rewrite plus_0_r in Hyl.
-  assert (Happ H1H2 (lift (Hlength H2) 0 y) x).
-  { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H12)
-        (c:=lift (Hlength H2) (Hlength H12) H'); auto using cobj_lift. }
-  apply JCProd with (Y0Y1 := lift (Hlength H2) (Hlength H12) Y0Y1) (HH' := x); auto.
-  { apply Yapp_lift; auto. }
-  { rewrite Heqy.
-    apply IHjobj1; auto. }
-  { rewrite Heqy.
-    apply IHjobj2; auto. }
-(* 25: JCSum *)
-  destruct (jobj_class H3_0) as [_ [_ [_ cH's]]].
-  inversion cH's; clear cH's; subst.
-  destruct (@Happ_exists (lift (Hlength H2) (Hlength H12) H')) with (a := H1H2H3) as [x Hx];
-    auto using cobj_lift.
-  destruct (@Happ_exists H') with (a := H12) as [y Hy]; auto.
-  pose proof (Hlength_Happ Hy) as Heqy.
-  replace (Hlength H12 + Hlength H') with (Hlength H' + Hlength H12) in Heqy by omega.
-  rewrite <- Heqy.
-  assert (Happ H1 y HH') by (eapply Happ_assoc_right; eauto).
-  assert (cobj y CTEnv) by (eapply Happ_cobj; eauto).
-  pose proof (Happ_lift Hy (Hlength H2) 0) as Hyl.
-  rewrite plus_0_r in Hyl.
-  assert (Happ H1H2 (lift (Hlength H2) 0 y) x).
-  { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H12)
-        (c:=lift (Hlength H2) (Hlength H12) H'); auto using cobj_lift. }
-  apply JCSum with (Y0Y1 := lift (Hlength H2) (Hlength H12) Y0Y1) (HH' := x); auto.
-  { apply Yapp_lift; auto. }
-  { rewrite Heqy.
-    apply IHjobj1; auto. }
-  { rewrite Heqy.
-    apply IHjobj2; auto. }
-(* 24: JCPi *)
-  destruct (jobj_class H3_) as [_ cH'].
-  destruct (jobj_class H3_0) as [_ [cs' ck']].
-  apply cobj_unlift in ck'.
-  destruct (jobj_class H3_1) as [ck _]; inversion ck; clear ck; subst.
-  destruct (@Happ_exists (lift (Hlength H2) (Hlength H11) H')) with (a := H1H2H3) as [x Hx];
-    auto using cobj_lift.
-  destruct (@Happ_exists (lift 1 0 (lift (Hlength H2) (Hlength H11) H'))) with
-    (a := HCons H1H2H3 (lift (Hlength H2) (Hlength H11) k)) as [z Hz]; auto using cobj_lift.
-  destruct (@Happ_exists H') with (a := H11) as [y Hy]; auto.
-  pose proof (Hlength_Happ Hy) as Heqy.
-  replace (Hlength H11 + Hlength H') with (Hlength H' + Hlength H11) in Heqy by omega.
-  rewrite <- Heqy.
-  assert (Happ H1 y HH').
-  { apply Happ_assoc_right with (ab:=H3) (b:=H11) (c:=H'); auto. }
-  assert (cobj y CTEnv) by (eapply Happ_cobj; eauto).
-  pose proof (Happ_lift Hy (Hlength H2) 0) as Hyl.
-  rewrite plus_0_r in Hyl.
-  assert (Happ H1H2 (lift (Hlength H2) 0 y) x).
-  { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H11)
-        (c:=lift (Hlength H2) (Hlength H11) H'); auto using cobj_lift. }
-  apply JCPi with (Y0Y1 := lift (Hlength H2) (Hlength H11) Y0Y1) (HH' := x)
-    (HaH' := z) (s' := lift (Hlength H2) (1 + Hlength y) s') ; auto.
-  { apply Yapp_lift; auto. }
-  { intros mSv.
-    replace (S (Hlength y)) with (Hlength (HCons y k')) by (simpl; omega).
-    apply (H10 mSv); auto using cobj, cobj_lift, Happ.
-    simpl; rewrite plus_0_r.
-    apply Happ1; auto. }
-  { rewrite Hlength_lift.
-    rewrite lift_lift; [|rewrite Heqy; omega].
-    destruct (@Happ_exists (lift 1 0 H')) with (a := HCons H11 k) as [w Hw]; auto using cobj_lift.
-    pose proof (Hlength_Happ Hw) as Heqw.
-    rewrite Hlength_lift in Heqw.
-    replace (1 + Hlength y) with (Hlength w) by (rewrite Heqw; simpl; omega).
-    replace (Hlength y + 1) with (Hlength w) by (rewrite Heqw; simpl; omega).
-    assert (cobj w CTEnv) by (eapply Happ_cobj; eauto using cobj, cobj_lift).
-    apply IHjobj2; auto.
-    { apply Happ_assoc_right with (ab:=HCons H3 k) (b:=HCons H11 k) (c:=lift 1 0 H');
-        auto using Happ, cobj_lift. }
-    apply Happ_assoc_right with (ab:=HCons H1H2H3 (lift (Hlength H2) (Hlength H11) k))
-          (b:=HCons (lift (Hlength H2) 0 H11) (lift (Hlength H2) (Hlength H11) k))
-          (c:=lift 1 0 (lift (Hlength H2) (Hlength H11) H'));
-      auto using Happ, cobj_lift.
-    pose proof (Happ_lift Hw (Hlength H2) 0) as Hwl.
-    simpl in Hwl.
-    rewrite plus_0_r in Hwl.
-    rewrite lift_lift_0.
-    exact Hwl. }
-  { apply_clear IHjobj3 (HCons H11 k).
-    apply_clear IHjobj3 (HCons H1H2H3 (lift (Hlength H2) (Hlength H11) k)).
-    assert_clear IHjobj3 Hp1; [auto using Happ|].
-    assert_clear IHjobj3 cH11k; [auto using cobj|].
-    assert_clear IHjobj3 Hp2; [simpl; rewrite plus_0_r; auto using Happ|].
-    assert_goal IHjobj3; simpl.
-    f_equal.
-    f_equal; [rewrite lift_lift_0; reflexivity..|].
-    repeat rewrite Hlength_lift.
-    rewrite lift_subst1_0; auto.
-    rewrite Heqy.
-    f_equal; [f_equal; omega|].
-    rewrite lift_lift; [|omega].
-    f_equal; omega. }
-(* 23: JCGen *)
-  apply JCGen; auto using cobj_lift.
-  intros mSv.
-  apply_clear H9 mSv.
-  apply_clear H9 (HCons H10 k).
-  apply_clear H9 (HCons H1H2H3 (lift (Hlength H2) (Hlength H10) k)).
-  assert_clear H9 Ha1; [auto using Happ|].
-  destruct (jobj_class H7) as [_ ck].
-  assert_clear H9 cH10k; [auto using cobj|].
-  apply H9.
-  simpl; rewrite plus_0_r.
-  auto using Happ.
-(* 22: JCInst *)
-  destruct (jobj_class H9) as [_ [cs ck]].
-  rewrite lift_subst1_0; auto.
-  apply JCInst; auto using cobj_lift.
-  intros mSv.
-  apply_clear H8 mSv.
-  apply_clear H8 (HCons H10 k).
-  apply_clear H8 (HCons H1H2H3 (lift (Hlength H2) (Hlength H10) k)).
-  assert_clear H8 Ha1; [auto using Happ|].
-  assert_clear H8 cH10k; [auto using cobj|].
-  apply H8.
-  simpl; rewrite plus_0_r.
-  auto using Happ.
-(* 21: JCUnfold *)
-  rewrite lift_subst1_0; auto using cobj.
-  destruct (Happ_cobj_rev H13 H4).
-  assert (cobj H1H2H3 CTEnv).
-  { apply (Happ_cobj H15); auto using cobj_lift. }
-  apply JCUnfold; auto using cobj_lift, jrec_lift_0.
-  intros mSv.
-  apply_clear H10 mSv.
-  apply_clear H10 (HCons H12 KStar).
-  apply H10; auto using Happ, cobj.
-  simpl; auto using Happ.
-(* 20: JCFold *)
-  destruct (jobj_class H7) as [_ [ct _]].
-  rewrite lift_subst1_0; auto using cobj.
-  apply JCFold; auto using cobj_lift, jrec_lift_0.
-  apply_clear IHjobj (HCons H9 KStar).
-  apply IHjobj; auto using Happ, cobj.
-  simpl; auto using Happ.
-(* 19: JCTop *)
+    apply IHjobj2; auto. } }
+(* (* 26: JCProd *) *)
+(*   destruct (jobj_class H3_0) as [_ [_ [_ cH's]]]. *)
+(*   inversion cH's; clear cH's; subst. *)
+(*   destruct (@Happ_exists (lift (Hlength H2) (Hlength H12) H')) with (a := H1H2H3) as [x Hx]; *)
+(*     auto using cobj_lift. *)
+(*   destruct (@Happ_exists H') with (a := H12) as [y Hy]; auto. *)
+(*   pose proof (Hlength_Happ Hy) as Heqy. *)
+(*   replace (Hlength H12 + Hlength H') with (Hlength H' + Hlength H12) in Heqy by omega. *)
+(*   rewrite <- Heqy. *)
+(*   assert (Happ H1 y HH') by (eapply Happ_assoc_right; eauto). *)
+(*   assert (cobj y CTEnv) by (eapply Happ_cobj; eauto). *)
+(*   pose proof (Happ_lift Hy (Hlength H2) 0) as Hyl. *)
+(*   rewrite plus_0_r in Hyl. *)
+(*   assert (Happ H1H2 (lift (Hlength H2) 0 y) x). *)
+(*   { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H12) *)
+(*         (c:=lift (Hlength H2) (Hlength H12) H'); auto using cobj_lift. } *)
+(*   apply JCProd with (Y0Y1 := lift (Hlength H2) (Hlength H12) Y0Y1) (HH' := x); auto. *)
+(*   { apply Yapp_lift; auto. } *)
+(*   { rewrite Heqy. *)
+(*     apply IHjobj1; auto. } *)
+(*   { rewrite Heqy. *)
+(*     apply IHjobj2; auto. } *)
+(* (* 25: JCSum *) *)
+(*   destruct (jobj_class H3_0) as [_ [_ [_ cH's]]]. *)
+(*   inversion cH's; clear cH's; subst. *)
+(*   destruct (@Happ_exists (lift (Hlength H2) (Hlength H12) H')) with (a := H1H2H3) as [x Hx]; *)
+(*     auto using cobj_lift. *)
+(*   destruct (@Happ_exists H') with (a := H12) as [y Hy]; auto. *)
+(*   pose proof (Hlength_Happ Hy) as Heqy. *)
+(*   replace (Hlength H12 + Hlength H') with (Hlength H' + Hlength H12) in Heqy by omega. *)
+(*   rewrite <- Heqy. *)
+(*   assert (Happ H1 y HH') by (eapply Happ_assoc_right; eauto). *)
+(*   assert (cobj y CTEnv) by (eapply Happ_cobj; eauto). *)
+(*   pose proof (Happ_lift Hy (Hlength H2) 0) as Hyl. *)
+(*   rewrite plus_0_r in Hyl. *)
+(*   assert (Happ H1H2 (lift (Hlength H2) 0 y) x). *)
+(*   { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H12) *)
+(*         (c:=lift (Hlength H2) (Hlength H12) H'); auto using cobj_lift. } *)
+(*   apply JCSum with (Y0Y1 := lift (Hlength H2) (Hlength H12) Y0Y1) (HH' := x); auto. *)
+(*   { apply Yapp_lift; auto. } *)
+(*   { rewrite Heqy. *)
+(*     apply IHjobj1; auto. } *)
+(*   { rewrite Heqy. *)
+(*     apply IHjobj2; auto. } *)
+(* (* 24: JCPi *) *)
+(*   destruct (jobj_class H3_) as [_ cH']. *)
+(*   destruct (jobj_class H3_0) as [_ [cs' ck']]. *)
+(*   apply cobj_unlift in ck'. *)
+(*   destruct (jobj_class H3_1) as [ck _]; inversion ck; clear ck; subst. *)
+(*   destruct (@Happ_exists (lift (Hlength H2) (Hlength H11) H')) with (a := H1H2H3) as [x Hx]; *)
+(*     auto using cobj_lift. *)
+(*   destruct (@Happ_exists (lift 1 0 (lift (Hlength H2) (Hlength H11) H'))) with *)
+(*     (a := HCons H1H2H3 (lift (Hlength H2) (Hlength H11) k)) as [z Hz]; auto using cobj_lift. *)
+(*   destruct (@Happ_exists H') with (a := H11) as [y Hy]; auto. *)
+(*   pose proof (Hlength_Happ Hy) as Heqy. *)
+(*   replace (Hlength H11 + Hlength H') with (Hlength H' + Hlength H11) in Heqy by omega. *)
+(*   rewrite <- Heqy. *)
+(*   assert (Happ H1 y HH'). *)
+(*   { apply Happ_assoc_right with (ab:=H3) (b:=H11) (c:=H'); auto. } *)
+(*   assert (cobj y CTEnv) by (eapply Happ_cobj; eauto). *)
+(*   pose proof (Happ_lift Hy (Hlength H2) 0) as Hyl. *)
+(*   rewrite plus_0_r in Hyl. *)
+(*   assert (Happ H1H2 (lift (Hlength H2) 0 y) x). *)
+(*   { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H11) *)
+(*         (c:=lift (Hlength H2) (Hlength H11) H'); auto using cobj_lift. } *)
+(*   apply JCPi with (Y0Y1 := lift (Hlength H2) (Hlength H11) Y0Y1) (HH' := x) *)
+(*     (HaH' := z) (s' := lift (Hlength H2) (1 + Hlength y) s') ; auto. *)
+(*   { apply Yapp_lift; auto. } *)
+(*   { intros mSv. *)
+(*     replace (S (Hlength y)) with (Hlength (HCons y k')) by (simpl; omega). *)
+(*     apply (H10 mSv); auto using cobj, cobj_lift, Happ. *)
+(*     simpl; rewrite plus_0_r. *)
+(*     apply Happ1; auto. } *)
+(*   { rewrite Hlength_lift. *)
+(*     rewrite lift_lift; [|rewrite Heqy; omega]. *)
+(*     destruct (@Happ_exists (lift 1 0 H')) with (a := HCons H11 k) as [w Hw]; auto using cobj_lift. *)
+(*     pose proof (Hlength_Happ Hw) as Heqw. *)
+(*     rewrite Hlength_lift in Heqw. *)
+(*     replace (1 + Hlength y) with (Hlength w) by (rewrite Heqw; simpl; omega). *)
+(*     replace (Hlength y + 1) with (Hlength w) by (rewrite Heqw; simpl; omega). *)
+(*     assert (cobj w CTEnv) by (eapply Happ_cobj; eauto using cobj, cobj_lift). *)
+(*     apply IHjobj2; auto. *)
+(*     { apply Happ_assoc_right with (ab:=HCons H3 k) (b:=HCons H11 k) (c:=lift 1 0 H'); *)
+(*         auto using Happ, cobj_lift. } *)
+(*     apply Happ_assoc_right with (ab:=HCons H1H2H3 (lift (Hlength H2) (Hlength H11) k)) *)
+(*           (b:=HCons (lift (Hlength H2) 0 H11) (lift (Hlength H2) (Hlength H11) k)) *)
+(*           (c:=lift 1 0 (lift (Hlength H2) (Hlength H11) H')); *)
+(*       auto using Happ, cobj_lift. *)
+(*     pose proof (Happ_lift Hw (Hlength H2) 0) as Hwl. *)
+(*     simpl in Hwl. *)
+(*     rewrite plus_0_r in Hwl. *)
+(*     rewrite lift_lift_0. *)
+(*     exact Hwl. } *)
+(*   { apply_clear IHjobj3 (HCons H11 k). *)
+(*     apply_clear IHjobj3 (HCons H1H2H3 (lift (Hlength H2) (Hlength H11) k)). *)
+(*     assert_clear IHjobj3 Hp1; [auto using Happ|]. *)
+(*     assert_clear IHjobj3 cH11k; [auto using cobj|]. *)
+(*     assert_clear IHjobj3 Hp2; [simpl; rewrite plus_0_r; auto using Happ|]. *)
+(*     assert_goal IHjobj3; simpl. *)
+(*     f_equal. *)
+(*     f_equal; [rewrite lift_lift_0; reflexivity..|]. *)
+(*     repeat rewrite Hlength_lift. *)
+(*     rewrite lift_subst1_0; auto. *)
+(*     rewrite Heqy. *)
+(*     f_equal; [f_equal; omega|]. *)
+(*     rewrite lift_lift; [|omega]. *)
+(*     f_equal; omega. } *)
+(* (* 23: JCGen *) *)
+(*   apply JCGen; auto using cobj_lift. *)
+(*   intros mSv. *)
+(*   apply_clear H9 mSv. *)
+(*   apply_clear H9 (HCons H10 k). *)
+(*   apply_clear H9 (HCons H1H2H3 (lift (Hlength H2) (Hlength H10) k)). *)
+(*   assert_clear H9 Ha1; [auto using Happ|]. *)
+(*   destruct (jobj_class H7) as [_ ck]. *)
+(*   assert_clear H9 cH10k; [auto using cobj|]. *)
+(*   apply H9. *)
+(*   simpl; rewrite plus_0_r. *)
+(*   auto using Happ. *)
+(* (* 22: JCInst *) *)
+(*   destruct (jobj_class H9) as [_ [cs ck]]. *)
+(*   rewrite lift_subst1_0; auto. *)
+(*   apply JCInst; auto using cobj_lift. *)
+(*   intros mSv. *)
+(*   apply_clear H8 mSv. *)
+(*   apply_clear H8 (HCons H10 k). *)
+(*   apply_clear H8 (HCons H1H2H3 (lift (Hlength H2) (Hlength H10) k)). *)
+(*   assert_clear H8 Ha1; [auto using Happ|]. *)
+(*   assert_clear H8 cH10k; [auto using cobj|]. *)
+(*   apply H8. *)
+(*   simpl; rewrite plus_0_r. *)
+(*   auto using Happ. *)
+(* (* 21: JCUnfold *) *)
+(*   rewrite lift_subst1_0; auto using cobj. *)
+(*   destruct (Happ_cobj_rev H13 H4). *)
+(*   assert (cobj H1H2H3 CTEnv). *)
+(*   { apply (Happ_cobj H15); auto using cobj_lift. } *)
+(*   apply JCUnfold; auto using cobj_lift, jrec_lift_0. *)
+(*   intros mSv. *)
+(*   apply_clear H10 mSv. *)
+(*   apply_clear H10 (HCons H12 KStar). *)
+(*   apply H10; auto using Happ, cobj. *)
+(*   simpl; auto using Happ. *)
+(* (* 20: JCFold *) *)
+(*   destruct (jobj_class H7) as [_ [ct _]]. *)
+(*   rewrite lift_subst1_0; auto using cobj. *)
+(*   apply JCFold; auto using cobj_lift, jrec_lift_0. *)
+(*   apply_clear IHjobj (HCons H9 KStar). *)
+(*   apply IHjobj; auto using Happ, cobj. *)
+(*   simpl; auto using Happ. *)
+{ (* JCTop *)
   destruct (Happ_cobj_rev H11 H4).
   assert (cobj H1H2H3 CTEnv).
   { apply (Happ_cobj H13); auto using cobj_lift. }
-  apply JCTop; auto using cobj_lift.
-(* 18: JCBot *)
-  apply JCBot; auto using cobj_lift.
-(* 17: JHNil *)
+  apply JCTop; auto using cobj_lift. }
+(* (* 18: JCBot *) *)
+(*   apply JCBot; auto using cobj_lift. *)
+{ (* JHNil *)
   apply JHNil.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 16: JHCons *)
+  apply (Happ_cobj H8); auto using cobj_lift. }
+{ (* JHCons *)
   destruct (jobj_class H3_) as [_ ?].
   destruct (@Happ_exists (lift (Hlength H2) (Hlength H5) H')) with (a := H1H2H3) as [x Hx];
     auto using cobj_lift.
@@ -845,86 +819,88 @@ induction 3; simpl in *; intros.
   apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H5)
         (c:=lift (Hlength H2) (Hlength H5) H'); auto using cobj_lift.
   pose proof (Happ_lift Hw (Hlength H2) 0) as Hwl.
-  rewrite plus_0_r in Hwl; exact Hwl.
-(* 15: JGNil *)
+  rewrite plus_0_r in Hwl; exact Hwl. }
+{ (* JGNil *)
   apply JGNil.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 14: JGCons *)
-  apply JGCons; auto.
-(* 13: WKStar *)
+  apply (Happ_cobj H8); auto using cobj_lift. }
+{ (* JGCons *)
+  apply JGCons; auto. }
+{ (* WKStar *)
   apply WKStar.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 12: WKOne *)
+  apply (Happ_cobj H8); auto using cobj_lift. }
+{ (* WKOne *)
   apply WKOne.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 11: WKProd *)
-  apply WKProd; auto.
-(* 10: WKRes *)
+  apply (Happ_cobj H8); auto using cobj_lift. }
+{ (* WKProd *) apply WKProd; auto. }
+{ (* WKRes *)
   apply WKRes; auto.
   apply_clear IHjobj2 (HCons H4 k).
   apply_clear IHjobj2 (HCons H1H2H3 (lift (Hlength H2) (Hlength H4) k)).
   assert_clear IHjobj2 Ha1; [auto using Happ|].
-  destruct (jobj_class H3_) as [_ ?].
+  destruct (jobj_class H3_) as [_ [? ?]].
   assert_clear IHjobj2 cH4k; [auto using cobj|].
   apply IHjobj2.
   simpl; rewrite plus_0_r.
-  auto using Happ.
-(* 9: WPTrue *)
+  auto using Happ. }
+{ (* WPTrue *)
   apply WPTrue.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 8: WPAnd *)
-  apply WPAnd; auto.
-(* 7: WPCoer *)
-  destruct (jobj_class H3_) as [_ cH'].
-  destruct (@Happ_exists (lift (Hlength H2) (Hlength H5) H')) with (a := H1H2H3) as [x Hx];
+  apply (Happ_cobj H8); auto using cobj_lift. }
+{ (* WPAnd *)
+  apply WPAnd; auto. }
+{ (* WPCoer *)
+  destruct (jobj_class H3_) as [_ [? cH']].
+  pose proof (jeq_Hlength H3_) as HeqH.
+  destruct (@Happ_exists (lift (Hlength H2) (Hlength H7) H4)) with (a := H1H2H3) as [x Hx];
     auto using cobj_lift.
-  destruct (@Happ_exists H') with (a := H5) as [w Hw]; auto.
+  destruct (@Happ_exists H4) with (a := H7) as [w Hw]; auto.
   pose proof (Hlength_Happ Hw) as Heqw.
-  replace (Hlength H5 + Hlength H') with (Hlength H' + Hlength H5) in Heqw by omega.
-  assert (Happ H1 w HH').
-  { apply Happ_assoc_right with (ab:=H3) (b:=H5) (c:=H'); auto. }
+  replace (Hlength H7 + Hlength H4) with (Hlength H4 + Hlength H7) in Heqw by omega.
+  assert (Happ H1 w HH1).
+  { apply Happ_assoc_right with (ab:=H3) (b:=H7) (c:=H4); auto. }
   assert (Happ H1H2 (lift (Hlength H2) 0 w) x).
-  { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H5)
-          (c:=lift (Hlength H2) (Hlength H5) H'); auto using cobj_lift.
+  { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H7)
+          (c:=lift (Hlength H2) (Hlength H7) H4); auto using cobj_lift.
     pose proof (Happ_lift Hw (Hlength H2) 0) as Hwl.
     rewrite plus_0_r in Hwl; exact Hwl. }
+  rewrite HeqH.
   rewrite <- Heqw.
-  apply WPCoer with (HH':=x); eauto using Happ_cobj.
-(* 6: WPExi *)
-  apply WPExi; auto.
-(* 5: WPFor *)
+  apply WPCoer with (HH1:=x); eauto using Happ_cobj. }
+{ (* WPExi *) apply WPExi; auto. }
+{ (* WPFor *)
   apply WPFor; auto.
   apply_clear IHjobj2 (HCons H4 k).
   apply_clear IHjobj2 (HCons H1H2H3 (lift (Hlength H2) (Hlength H4) k)).
   assert_clear IHjobj2 Ha1; [auto using Happ|].
-  destruct (jobj_class H3_) as [_ ck].
+  destruct (jobj_class H3_) as [_ [ck' ck]].
   assert_clear IHjobj2 cH4k; [auto using cobj|].
   apply IHjobj2.
   simpl; rewrite plus_0_r.
-  auto using Happ.
-(* 4: WHNil *)
+  auto using Happ. }
+{ (* WHNil *)
   apply WHNil.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 3: WHCons *)
-  destruct (jobj_class H3_) as [_ ?].
-  destruct (@Happ_exists (lift (Hlength H2) (Hlength H5) H')) with (a := H1H2H3) as [x Hx];
+  apply (Happ_cobj H8); auto using cobj_lift. }
+{ (* WHCons *)
+  destruct (jobj_class H3_) as [_ [_ ?]].
+  pose proof (jeq_Hlength H3_) as HeqH.
+  destruct (@Happ_exists (lift (Hlength H2) (Hlength H7) H4)) with (a := H1H2H3) as [x Hx];
     auto using cobj_lift.
-  destruct (@Happ_exists  H') with (a := H5) as [w Hw]; auto.
+  destruct (@Happ_exists  H4) with (a := H7) as [w Hw]; auto.
   pose proof (Hlength_Happ Hw) as Heqw.
-  replace (Hlength H5 + Hlength H') with (Hlength H' + Hlength H5) in Heqw by omega.
-  apply WHCons with (HH':=x); auto.
+  replace (Hlength H7 + Hlength H4) with (Hlength H4 + Hlength H7) in Heqw by omega.
+  apply WHCons with (HH1:=x); auto.
+  rewrite HeqH.
   rewrite <- Heqw.
   apply IHjobj2; eauto using Happ_cobj.
-  { apply Happ_assoc_right with (ab:=H3) (b:=H5) (c:=H'); auto. }
-  apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H5)
-        (c:=lift (Hlength H2) (Hlength H5) H'); auto using cobj_lift.
+  { apply Happ_assoc_right with (ab:=H3) (b:=H7) (c:=H4); auto. }
+  apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H7)
+        (c:=lift (Hlength H2) (Hlength H7) H4); auto using cobj_lift.
   pose proof (Happ_lift Hw (Hlength H2) 0) as Hwl.
-  rewrite plus_0_r in Hwl; exact Hwl.
-(* 2: WYNil *)
+  rewrite plus_0_r in Hwl; exact Hwl. }
+{ (* WYNil *)
   apply WYNil.
-  apply (Happ_cobj H8); auto using cobj_lift.
-(* 1: WYCons *)
-  apply WYCons; auto.
+  apply (Happ_cobj H8); auto using cobj_lift. }
+{ (* WYCons *)
+  apply WYCons; auto. }
 Qed.
 
 Lemma jobj_lift_0 : forall {H1 H2 H1H2 v j}, Happ H1 H2 H1H2 -> cobj H1H2 CTEnv ->
@@ -2626,4 +2602,3 @@ end.
   destruct eC as [jH' _].
   apply JCoer with H' HH' t; auto.
 Qed.
-
