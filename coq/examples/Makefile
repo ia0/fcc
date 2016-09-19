@@ -12,7 +12,7 @@ all: $(OBJECTS)
 	coqc -q -I .. $*.v > $*.w ; rm -f $*.glob $*.vo
 
 %.lo %.lh: %.w
-	../src/c2l.native $*.lo $*.lh < $*.w || (cat $*.w ; false)
+	../../src/c2l.native $*.lo $*.lh < $*.w || (cat $*.w ; false)
 
 %: %.lo %.lh
 	cat $*.lo

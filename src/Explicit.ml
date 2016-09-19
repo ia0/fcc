@@ -37,7 +37,7 @@ and ('bind, 'var) proof =
   | PFix of 'bind * ('bind, 'var) prop * ('bind, 'var) proof
   | PCoer of ('bind, 'var) coer * ('bind, 'var) typ
 and ('bind, 'var) coer =
-  | GProp of ('bind, 'var) proof
+  | GProp of ('bind, 'var) cotenv * ('bind, 'var) proof
   | GRefl
   | GTrans of ('bind, 'var) coer * ('bind, 'var) coer
   | GWeak of ('bind, 'var) coer
@@ -62,7 +62,7 @@ and ('bind, 'var) kind =
 and ('bind, 'var) prop =
   | WPTrue
   | WPAnd of ('bind, 'var) prop * ('bind, 'var) prop
-  | WPCoer of ('bind, 'var) cotenv * ('bind, 'var) typ * ('bind, 'var) typ
+  | WPCoer of ('bind, 'var) tenv * ('bind, 'var) typ * ('bind, 'var) typ
   | WPExi of ('bind, 'var) kind
   | WPFor of 'bind * ('bind, 'var) kind * ('bind, 'var) prop
 and ('bind, 'var) tenv =
@@ -140,7 +140,7 @@ and print_proof (p : dproof) =
   | PCoer (g, t) -> sprintf "(pCoer %s %s)" (print_coer g) (print_typ t)
 and print_coer (g : dcoer) =
   match g with
-  | GProp p -> sprintf "(gProp %s)" (print_proof p)
+  | GProp (h, p) -> sprintf "(gProp %s %s)" (print_cotenv h) (print_proof p)
   | GRefl -> "gRefl"
   | GTrans (g1, g2) -> sprintf "(gTrans %s %s)" (print_coer g1) (print_coer g2)
   | GWeak g -> sprintf "(gWeak %s)" (print_coer g)
@@ -168,7 +168,7 @@ and print_prop (p : dprop) =
   match p with
   | WPTrue -> "wPTrue"
   | WPAnd (p1, p2) -> sprintf "(wPAnd %s %s)" (print_prop p1) (print_prop p2)
-  | WPCoer (h, t, s) -> sprintf "(wPCoer %s %s %s)" (print_cotenv h) (print_typ t) (print_typ s)
+  | WPCoer (h, t, s) -> sprintf "(wPCoer %s %s %s)" (print_tenv h) (print_typ t) (print_typ s)
   | WPExi k -> sprintf "(wPExi %s)" (print_kind k)
   | WPFor (_, k, p) -> sprintf "(wKFor %s %s)" (print_kind k) (print_prop p)
 and print_tenv (h : dtenv) =
@@ -235,9 +235,9 @@ and resolve_proof la lc0 lc1 (p : nproof) : dproof =
     PCoer (g', resolve_typ (la' @ la) t)
 and resolve_coer la lc0 lc1 (g : ncoer) : string list * dcoer =
   match g with
-  | GProp p ->
-    let (la', h') = resolve_tenv la h in
-    (la', GProp (resolve_proof la lc0 lc1 p, h'))
+  | GProp (h, p) ->
+    let (la', h') = resolve_cotenv la h in
+    (la', GProp (h', resolve_proof la lc0 lc1 p))
   | GRefl -> ([], GRefl)
   | GTrans (g2, g1) ->
     let (la2', g2') = resolve_coer la lc0 lc1 g2 in
@@ -286,7 +286,7 @@ and resolve_prop la (p : nprop) : dprop =
   | WPTrue -> WPTrue
   | WPAnd (p1, p2) -> WPAnd (resolve_prop la p1, resolve_prop la p2)
   | WPCoer (h, t, s) ->
-    let (la', h') = resolve_cotenv la h in
+    let (la', h') = resolve_tenv la h in
     WPCoer (h', resolve_typ (la' @ la) t, resolve_typ la s)
   | WPExi k -> WPExi (resolve_kind la k)
   | WPFor (a, k, p) -> WPFor ((), resolve_kind la k, resolve_prop (a :: la) p)

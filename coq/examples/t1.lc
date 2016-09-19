@@ -1,1 +1,1 @@
-gen (a : exists Top) fun (f : a -> a) fun (x : a) f x
+gen (a [exists Top] : *) fun (f : a -> a) fun (x : a) f x

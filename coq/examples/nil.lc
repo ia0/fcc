@@ -1,3 +1,3 @@
-gen (a : exists Top)
+gen (a [exists Top] : *)
 fold b (Top + a * b)
 inl (Top fun (x : Top) x) (a * (mu list Top + a * list))

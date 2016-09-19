@@ -185,8 +185,8 @@ propinfix:
 | p1 = propatom COMMA p2 = propinfix
     { WPAnd (p1, p2) }
 | t = typinfix LANGLE s = typ
-    { WPCoer (HNil, t, s) }
-| h = cotenv BAR t = typ LANGLE s = typ
+    { WPCoer (WHNil, t, s) }
+| h = tenv BAR t = typ LANGLE s = typ
     { WPCoer (h, t, s) }
 | p = propatom
     { p }
@@ -196,6 +196,12 @@ propatom:
     { WPTrue }
 | LPAREN p = prop RPAREN
     { p }
+
+tenv:
+| h = tenv COMMA LPAREN a = IDENT COLON k = kind RPAREN
+    { WHCons (h, a, k) }
+| DOT
+    { WHNil }
 
 term:
 | FUN LPAREN x = IDENT COLON t = typ RPAREN a = term
@@ -220,4 +226,3 @@ termatom:
     { EInr (t, a) }
 | LPAREN a = term RPAREN
     { a }
-
