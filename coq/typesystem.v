@@ -9,9 +9,10 @@ Require Import list.
 (** * System Fcc (common part)
 
 This file formalizes all definitions and typing rules of System Fcc
-that are not related to terms. The only term related part of the system
-is the term judgment, which is described in [Ltypesystem_v] for its
-lambda version and [Ltypesystem_v] for its indexed (or fuel) version.
+that are not related to terms. The only term related part of the
+system is the term judgment, which is described in [Ltypesystem_v] for
+its lambda version and [Ltypesystem_v] for its indexed (or fuel)
+version.
 *)
 
 (** ** Syntax
@@ -20,7 +21,7 @@ The formalization of the type system syntax differs from its
 definition in the manuscript in the sense that the formalization
 defines the syntax in two steps. We first define a unique inductive
 for all syntactical objects, and then define a judgment to classify
-these objects in the syntactical classses of the manuscript.
+these objects in the syntactical classes of the manuscript.
 *)
 
 (** *** Objects
@@ -686,8 +687,8 @@ state when a premise is required for soundness (and thus redundant)
 with the letter [S], and we will also state when a premise is not
 needed for soundness but present in the manuscript with the letter [E]
 (like extraction). Ideally, we would parametrize the formalization
-over whether we are in the [E] or [S] version of the type system, and show
-that the [E] version implies the [S] version.
+over whether we are in the [E] or [S] version of the type system, and
+show that the [E] version implies the [S] version.
 
 Soundness alse needs some objects to be in the correct syntactical
 class. In the manuscript, this holds by syntactical well-formedness,
@@ -966,7 +967,6 @@ Inductive jobj v : tenv -> judg -> Prop :=
   jobj v H (Jwf (PAnd p1 p2) CProp)
 | WPCoer : forall H H' HH' t' t,
   Happ H H' HH' ->
-  (False -> jobj v H (JH H')) ->
   jobj v H (Jwf H' CTEnv) ->
   jobj v HH' (JT t' KStar) ->
   jobj v H (JT t KStar) ->

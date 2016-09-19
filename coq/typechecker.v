@@ -43,7 +43,7 @@ Inductive eobj : Set :=
 | pFix (P : eobj) (p : eobj)
 | pCoer (g : eobj) (t : eobj)
 (* g coercions *)
-| gProp (p : eobj)
+| gProp (h : eobj) (p : eobj)
 | gRefl
 | gTrans (g2 : eobj) (g1 : eobj)
 | gWeak (g : eobj)
@@ -196,6 +196,15 @@ Lemma JCProp_aux : forall {H Y0 Y1 Y02 Y12 xH' xt' H' t' xt rec},
 Proof.
 intros; subst.
 inversion H2; clear H2; subst.
+assumption.
+Qed.
+
+Lemma JCProp_aux2 : forall {H xH' H' rec},
+  xH' = H' ->
+  jobj (rec, vP) H (JH xH') ->
+  jobj (rec, vP) H (JH H').
+Proof.
+intros; subst.
 assumption.
 Qed.
 
@@ -497,7 +506,7 @@ Fixpoint otc b rec H j (o : eobj) : exn (osig b rec H j) :=
         | Err x => Err x
       end
     | pCoer _ _, g => Err (Obj o (ExpectedJEnv g))
-    | gProp p, EC1 Y0 Y1 =>
+    | gProp _ p, EC1 Y0 Y1 =>
       match otc b rec H (EP Y0 Y1) p with
         | OK (ocheck (JP _ _ (PCoer H' _ _)) _ _) =>
           match Atc H H' with
@@ -508,20 +517,27 @@ Fixpoint otc b rec H j (o : eobj) : exn (osig b rec H j) :=
         | OK (Hcheck _ _ _) => Err Impossible
         | Err x => Err x
       end
-    | gProp p, EC2 Y0 Y1 H' t' =>
-      match otc b rec H (EP Y0 Y1) p with
-        | OK (ocheck (JP Y02 Y12 (PCoer xH' xt' xt)) jp gr) =>
-            match obj_dec xH' H', obj_dec xt' t' with
-              | left Heq1, left Heq2 =>
-                  OK (ocheck _ (!2 jp gr fun jp gr => JCProp _ H Y0 Y1 H' t' xt
-                               (JCProp_aux Heq2 Heq1 gr jp)) (!0 AC2))
-              | _, _ => Err (String "otc gProp EC2")
-            end
-        | OK (ocheck j _ _) => Err (Obj p (ExpectedGotJudg (EP Y0 Y1) j))
+    | gProp h p, EC2 Y0 Y1 H' t' =>
+      match otc b rec H EH h with
+        | OK (ocheck (JH xH'') jH' _) =>
+          match otc b rec H (EP Y0 Y1) p with
+            | OK (ocheck (JP Y02 Y12 (PCoer xH' xt' xt)) jp gr) =>
+              match obj_dec xH' H', obj_dec xt' t', obj_dec xH'' H' with
+                | left Heq1, left Heq2, left Heq3 =>
+                  OK (ocheck _ (!3 jp gr jH' fun jp gr jH' => JCProp _ H Y0 Y1 H' t' xt
+                               (JCProp_aux Heq2 Heq1 gr jp)
+                               (JCProp_aux2 Heq3 jH')) (!0 AC2))
+                | _, _, _ => Err (String "otc gProp EC2")
+              end
+            | OK (ocheck j _ _) => Err (Obj p (ExpectedGotJudg (EP Y0 Y1) j))
+            | OK (Hcheck _ _ _) => Err Impossible
+            | Err x => Err x
+          end
+        | OK (ocheck j _ _) => Err (Obj h (ExpectedGotJudg EH j))
         | OK (Hcheck _ _ _) => Err Impossible
         | Err x => Err x
       end
-    | gProp _, g => Err (Obj o (ExpectedJEnv g))
+    | gProp _ _, g => Err (Obj o (ExpectedJEnv g))
     | gRefl, EC1 _ _ => OK (Hcheck HNil H (!0 Happ0 _))
     | gRefl, EC2 Y0 Y1 HNil t =>
       do_cobj (Obj o) H CTEnv >>= fun cH =>
@@ -636,8 +652,8 @@ Fixpoint otc b rec H j (o : eobj) : exn (osig b rec H j) :=
       end
     | wPAnd _ _, g => Err (Obj o (ExpectedJEnv g))
     | wPCoer h t' t, Ewf =>
-      match otc b rec H EH h with
-        | OK (ocheck (JH H') jH' _) =>
+      match otc b rec H Ewf h with
+        | OK (ocheck (Jwf H' CTEnv) jH' _) =>
           match otc b rec H ET t with
             | OK (ocheck (JT xt KStar) jt _) =>
               match Atc H H' with
@@ -655,7 +671,7 @@ Fixpoint otc b rec H j (o : eobj) : exn (osig b rec H j) :=
             | OK (Hcheck _ _ _) => Err Impossible
             | Err x => Err x
           end
-        | OK (ocheck j _ _) => Err (Obj h (ExpectedGotJudg EH j))
+        | OK (ocheck j _ _) => Err (Obj h (ExpectedGotJudg Ewf j))
         | OK (Hcheck _ _ _) => Err Impossible
         | Err x => Err x
       end

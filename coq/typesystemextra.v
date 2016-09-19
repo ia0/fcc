@@ -860,16 +860,16 @@ induction 3; simpl in *; intros.
   apply WPAnd; auto.
 (* 7: WPCoer *)
   destruct (jobj_class H3_) as [_ cH'].
-  destruct (@Happ_exists (lift (Hlength H2) (Hlength H7) H')) with (a := H1H2H3) as [x Hx];
+  destruct (@Happ_exists (lift (Hlength H2) (Hlength H5) H')) with (a := H1H2H3) as [x Hx];
     auto using cobj_lift.
-  destruct (@Happ_exists H') with (a := H7) as [w Hw]; auto.
+  destruct (@Happ_exists H') with (a := H5) as [w Hw]; auto.
   pose proof (Hlength_Happ Hw) as Heqw.
-  replace (Hlength H7 + Hlength H') with (Hlength H' + Hlength H7) in Heqw by omega.
+  replace (Hlength H5 + Hlength H') with (Hlength H' + Hlength H5) in Heqw by omega.
   assert (Happ H1 w HH').
-  { apply Happ_assoc_right with (ab:=H3) (b:=H7) (c:=H'); auto. }
+  { apply Happ_assoc_right with (ab:=H3) (b:=H5) (c:=H'); auto. }
   assert (Happ H1H2 (lift (Hlength H2) 0 w) x).
-  { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H7)
-          (c:=lift (Hlength H2) (Hlength H7) H'); auto using cobj_lift.
+  { apply Happ_assoc_right with (ab:=H1H2H3) (b:=lift (Hlength H2) 0 H5)
+          (c:=lift (Hlength H2) (Hlength H5) H'); auto using cobj_lift.
     pose proof (Happ_lift Hw (Hlength H2) 0) as Hwl.
     rewrite plus_0_r in Hwl; exact Hwl. }
   rewrite <- Heqw.
@@ -1444,7 +1444,7 @@ induction 1; simpl in *; intros.
 (* 8: WPAnd *)
   apply WPAnd; auto.
 (* 7: WPCoer *)
-  destruct (jobj_class H3) as [_ cH'].
+  destruct (jobj_class H1) as [_ cH'].
   destruct (@Happ_exists (subst s (Hlength b) H')) with (a := ab) as [x Hx];
     auto using cobj_subst.
   destruct (@Happ_exists H') with (a := b) as [w Hw]; auto.

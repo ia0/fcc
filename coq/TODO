@@ -1,7 +1,8 @@
-- internaliser PExiH
+- Rename Fcc into Fth
+- Internalize PExiH
 - Flanguage.red
-| RedCtx : forall k a a' c, red a a' -> red (fill c (1 + k) a) (fill c k a')
-| RedApp : forall k k' a b, red (App (1 + k) (Lam k' a) b) (lower k (subst b 0 a))
+  | RedCtx : forall k a a' c, red a a' -> red (fill c (1 + k) a) (fill c k a')
+  | RedApp : forall k k' a b, red (App (1 + k) (Lam k' a) b) (lower k (subst b 0 a))
 - TLam TApp KArr
 - syntax
   λ ( ident : type ) term
