@@ -759,6 +759,10 @@ Inductive jobj v : tenv -> judg -> Prop :=
   jobj v H (JT t1 k1) ->
   jobj v H (JT t2 k2) ->
   jobj v H (JT (TPair t1 t2) (KProd k1 k2))
+| JTPairEta : forall H t k1 k2,
+  jobj v H (JT (TFst t) k1) ->
+  jobj v H (JT (TSnd t) k2) ->
+  jobj v H (JT t (KProd k1 k2))
 | JTFst : forall H t k1 k2,
   jobj v H (JT t (KProd k1 k2)) ->
   jobj v H (JT (TFst t) k1)

@@ -68,9 +68,8 @@ Definition sunit so :=
 
 Definition sprod f1 f2 so :=
   match so with
-    | SSet _ => False
-    | SUnit => False
     | SPair so1 so2 => f1 so1 /\ f2 so2
+    | _ => f1 SUnit /\ f2 SUnit
   end.
 
 Definition getstar so :=
@@ -1636,7 +1635,7 @@ Definition semjudg H J :=
       exists fH fk,
       semobj H (STEnv fH) /\
       semobj k (SKind fk) /\
-      forall h, fH nil h -> exists x, fk h x
+      (forall h, fH nil h -> exists x, fk h x)
     | JT t k =>
       exists fH ft fk,
       semobj H (STEnv fH) /\
@@ -1690,7 +1689,7 @@ induction 1; unfold semjudg in *; try exact I.
   destruct IHjobj as [fH [fY0 [fY1 [fp [? [? [? [? Cp]]]]]]]].
   semobj_cstr.
   exists fH, fk.
-  split; [|split]; auto.
+  repeat split; auto.
   intros h fHh.
   apply (Cp h fHh 0); auto.
 (* 48: JTeq *)
@@ -1828,7 +1827,27 @@ induction 1; unfold semjudg in *; try exact I.
   semobjeq_rename H fH sH.
   exists fH, (fun h => SPair (ft1 h) (ft2 h)), (fun h => sprod (fk1 h) (fk2 h)).
   split; [|split; [|split]]; eauto using semobj.
-(* 34: JTFst *)
+(* 35bis: JTPairEta *)
+  {
+  destruct IHjobj1 as [fH1 [ft1 [fk1 [? [? [? C1]]]]]].
+  destruct IHjobj2 as [fH2 [ft2 [fk2 [? [? [? C2]]]]]].
+  semobjeq_rename H fH sH.
+  inversion H2; clear H2; subst.
+  inversion H5; clear H5; subst.
+  semobjeq t.
+  exists fH, (fun h => ft0 h), (fun h => sprod (fk1 h) (fk2 h)).
+  repeat split;  eauto using semobj.
+  intros.
+  unfold sprod.
+  remember (ft0 h) as obj.
+  pose (C1 h H0) as C1'.
+  pose (C2 h H0) as C2'.
+  rewrite <- Heqobj in C1'.
+  rewrite <- Heqobj in C2'.
+  destruct obj; simpl in C1'; simpl in C2'; split; auto.
+  }
+  (* 34: JTFst *)
+  {
   destruct IHjobj as [fH [ft [fk [? [? [? Ck]]]]]].
   semobj_cstr.
   exists fH, (fun h => sfst (ft h)), f1.
@@ -1836,9 +1855,10 @@ induction 1; unfold semjudg in *; try exact I.
   intros h fHh.
   apply_clear Ck h.
   apply_clear Ck fHh.
-  destruct (ft h); simpl in Ck; try (exfalso; assumption).
-  exact (proj1 Ck).
+  destruct (ft h); destruct Ck; assumption.
+  }
 (* 33: JTSnd *)
+  {
   destruct IHjobj as [fH [ft [fk [? [? [? Ck]]]]]].
   semobj_cstr.
   exists fH, (fun h => ssnd (ft h)), f2.
@@ -1846,8 +1866,8 @@ induction 1; unfold semjudg in *; try exact I.
   intros h fHh.
   apply_clear Ck h.
   apply_clear Ck fHh.
-  destruct (ft h); simpl in Ck; try (exfalso; assumption).
-  exact (proj2 Ck).
+  destruct (ft h); destruct Ck; assumption.
+  }
 (* 32: JTPack *)
   destruct IHjobj1 as [fH1 [ft [fk [? [? [? Ck]]]]]].
   destruct IHjobj2 as [fH2 [fY0 [fY1 [fp [? [? [? [? Cp]]]]]]]].
