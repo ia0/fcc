@@ -3,8 +3,6 @@ Require Import Min.
 Require Import Max.
 
 Require Import set.
-Require Import Flanguage.
-Module F := Flanguage.
 
 (** * Lambda Calculus *)
 
@@ -14,10 +12,29 @@ Module F := Flanguage.
 indexed terms without the notion of fuel. They contain variables,
 abstractions, applications, pairs, projections, generalization, and
 instantiations.
+
+Scoping is informally described by "a : I J" where I (resp. J) is a
+partial function from natural numbers to term (resp. proposition)
+binding points. Both functions are defined from 0 up to a natural
+number, which is excluded and written |I| (resp. |J|), and undefined
+from this number.
 *)
 Inductive term : Set :=
+(* x < |I|
+   -------
+   x : I J
+*)
 | Var (x : nat)
+(* a : (0 => bind | S i => I i) J
+   ------------------------------
+   Lam a : I J
+*)
 | Lam (a : term)
+(* a : I J
+   b : I J
+   -------------
+   App a b : I J
+*)
 | App (a : term) (b : term)
 | Unit
 | Pair (a : term) (b : term)
@@ -26,9 +43,25 @@ Inductive term : Set :=
 | Absurd (a : term)
 | Inl (a : term)
 | Inr (a : term)
+(* a : I J
+   bl : (0 => bind | S i => I i) J
+   br : (0 => bind | S i => I i) J
+   -------------------------------
+   Match a bl br : I J
+*)
 | Match (a : term) (bl : term) (br : term)
-| Gen (a : term)
-| Inst (a : term)
+| Witness
+(* a : I J
+   b : I (0 => bind | S j => J j)
+   ------------------------------
+   Assume a b : I J
+*)
+| Assume (a : term) (b : term)
+(* a : I (j when j < n => J j | j => J (S j))
+   ------------------------------------------
+   Hide n a : I J
+*)
+| Hide (p : nat) (a : term)
 .
 
 (** ** Functions *)
@@ -38,23 +71,29 @@ variables. The term [traverse f i a] has the same structure as [a] but
 for its variables [Var x] that become [f x i]. The level [i] indicates
 how deep we are in the term: it is incremented each time we cross a
 binder. The only binder of the Lambda Calculus is [Lam] and it binds
-only one term, so the recursive call uses the level [1 + i].
+only one term, so the recursive call uses the level [1 + i]. The level
+[j] is similar but for proposition variables.
+
+Note that substitution and lifting will never encounter an outer Hide
+since no proposition variables are visible in the redex context. In
+other words, we use this function only on proposition-closed terms.
 *)
-Definition traverse f := fix g i a :=
+Definition traverse f := fix g i j a :=
   match a with
-  | Var x => f x i
-  | Lam a => Lam (g (1 + i) a)
-  | App a b => App (g i a) (g i b)
+  | Var x => f x i j
+  | Lam a => Lam (g (1 + i) j a)
+  | App a b => App (g i j a) (g i j b)
   | Unit => Unit
-  | Pair a b => Pair (g i a) (g i b)
-  | Fst a => Fst (g i a)
-  | Snd a => Snd (g i a)
-  | Absurd a => Absurd (g i a)
-  | Inl a => Inl (g i a)
-  | Inr a => Inr (g i a)
-  | Match a bl br => Match (g i a) (g (1 + i) bl) (g (1 + i) br)
-  | Gen a => Gen (g i a)
-  | Inst a => Inst (g i a)
+  | Pair a b => Pair (g i j a) (g i j b)
+  | Fst a => Fst (g i j a)
+  | Snd a => Snd (g i j a)
+  | Absurd a => Absurd (g i j a)
+  | Inl a => Inl (g i j a)
+  | Inr a => Inr (g i j a)
+  | Match a bl br => Match (g i j a) (g (1 + i) j bl) (g (1 + i) j br)
+  | Witness => Witness
+  | Assume a b => Assume (g i j a) (g i (1 + j) b)
+  | Hide p a => Hide p (g i (j - 1) a) (* assumes proposition-closed term *)
   end.
 
 (** We define the lifting function [lift] and substitution function
@@ -66,15 +105,47 @@ incremented by [d]. The term [subst b i a] has the same structure as
 variables equal to [i] are replaced with [b] lifted by [i] from level
 [0].
 *)
-Definition lift_idx d x i := Var (if le_gt_dec i x then d + x else x).
+Definition lift_idx d x i (j : nat) := Var (if le_gt_dec i x then d + x else x).
 Definition lift d := traverse (lift_idx d).
 Definition shift := lift 1.
 Hint Unfold lift_idx lift shift.
 
-Definition subst_idx b x i :=
+Fixpoint hide j a :=
+  match j with
+    | O => a
+    | S j => Hide j (hide j a)
+      (* Alternative versions:
+         - hide j (Hide 0 a)
+         - Hide 0 (hide j a) *)
+  end.
+
+Fixpoint unhide j a :=
+  match a with
+  | Var x => Var x
+  | Lam a => Lam (unhide j a)
+  | App a b => App (unhide j a) (unhide j b)
+  | Unit => Unit
+  | Pair a b => Pair (unhide j a) (unhide j b)
+  | Fst a => Fst (unhide j a)
+  | Snd a => Snd (unhide j a)
+  | Absurd a => Absurd (unhide j a)
+  | Inl a => Inl (unhide j a)
+  | Inr a => Inr (unhide j a)
+  | Match a bl br => Match (unhide j a) (unhide j bl) (unhide j br)
+  | Witness => Witness
+  | Assume a b => Assume (unhide j a) (unhide (1 + j) b)
+  | Hide p a =>
+    match lt_eq_lt_dec p j with
+      | inleft (left _)  => Hide p (unhide (j - 1) a)
+      | inleft (right _) => a
+      | inright _        => Hide (p - 1) (unhide j a)
+    end
+  end.
+
+Definition subst_idx b x i j :=
   match lt_eq_lt_dec x i with
     | inleft (left _)  => Var x
-    | inleft (right _) => lift x 0 b
+    | inleft (right _) => hide j (lift x 0 0 b)
     | inright _        => Var (x - 1)
   end.
 Definition subst b := traverse (subst_idx b).
@@ -89,307 +160,100 @@ Ltac subst_lift_var := repeat (match goal with
       destruct (le_gt_dec x y); try (exfalso; omega); simpl; auto
   end).
 
-(** We define the [drop] function from indexed terms to lambda terms
-by dropping the fuel annotations. We show a few commutation lemmas
-with the [lower], [lift], and [subst] functions.
-*)
-Fixpoint drop a :=
-  match a with
-    | F.Var _ x => Var x
-    | F.Lam _ a => Lam (drop a)
-    | F.App _ a b => App (drop a) (drop b)
-    | F.Unit _ => Unit
-    | F.Pair _ a b => Pair (drop a) (drop b)
-    | F.Fst _ a => Fst (drop a)
-    | F.Snd _ a => Snd (drop a)
-    | F.Absurd _ a => Absurd (drop a)
-    | F.Inl _ a => Inl (drop a)
-    | F.Inr _ a => Inr (drop a)
-    | F.Match _ a bl br => Match (drop a) (drop bl) (drop br)
-    | F.Gen _ a => Gen (drop a)
-    | F.Inst _ a => Inst (drop a)
-  end.
-
-Lemma drop_lower : forall k a, drop (lower k a) = drop a.
-Proof.
-induction a; simpl;
-repeat (match goal with
-  | IH : drop (lower _ _) = _ |- _ => rewrite IH; clear IH
-end); auto.
-Qed.
-
-Lemma drop_lift : forall x a i, drop (F.lift x i a) = lift x i (drop a).
-Proof.
-induction a; simpl; intros i;
-repeat (match goal with
-  | IH : forall _, drop (F.lift _ _ _) = _ |- _ => rewrite IH; clear IH
-end); auto.
-Qed.
-
-Lemma drop_subst : forall b a i, drop (F.subst b i a) = subst (drop b) i (drop a).
-Proof.
-induction a; simpl; intros i;
-repeat (match goal with
-  | IH : forall _, drop (F.subst _ _ _) = _ |- _ => rewrite IH; clear IH
-end); auto.
-(* Var *)
-  F.subst_lift_var; unfold subst_idx;
-  destruct (lt_eq_lt_dec x i) as [[?|?]|?]; try (exfalso; omega); auto.
-  rewrite drop_lower.
-  apply drop_lift.
-Qed.
-
-(** We define the analog of [drop] in the opposite direction. The
-indexed term [kfill k a] is similar to the lambda term [a] where all
-fuel annotations are equal to [k]. We show that [kfill k a] is smaller
-than [k], and that [drop] neutralizes the effect of [kfill].
-*)
-Definition kfill k := fix f a :=
-  match a with
-    | Var x => F.Var k x
-    | Lam a => F.Lam k (f a)
-    | App a b => F.App k (f a) (f b)
-    | Unit => F.Unit k
-    | Pair a b => F.Pair k (f a) (f b)
-    | Fst a => F.Fst k (f a)
-    | Snd a => F.Snd k (f a)
-    | Absurd a => F.Absurd k (f a)
-    | Inl a => F.Inl k (f a)
-    | Inr a => F.Inr k (f a)
-    | Match a bl br => F.Match k (f a) (f bl) (f br)
-    | Gen a => F.Gen k (f a)
-    | Inst a => F.Inst k (f a)
-  end.
-
-Lemma term_ge_kfill : forall k a, term_ge (kfill k a) k.
-Proof. induction a; simpl; auto. Qed.
-
-Lemma drop_kfill : forall k a, drop (kfill k a) = a.
-Proof. induction a; simpl; f_equal; auto. Qed.
-
 Definition set := @set.set term.
 
 (** ** Reduction *)
 
-(** Evaluation contexts [Ctx] contain all one-hole contexts of depth
-one, but for [Gen]. This gives us strong reduction for all constructs
-but [Gen], because the only role [Gen] is to block reduction. The
-meaning of [Ctx] is given by the [fill] function. The term [fill c a]
-wraps the term [a] under the context [c]. We show that [drop] and
-[fill] commute.
+(** Evaluation contexts [Ctx] contain all one-hole contexts. This
+gives us strong reduction for all constructs. The meaning of [Ctx] is
+given by the [fill] function. The term [fill c a] wraps the term [a]
+under the context [c].
 *)
 Inductive Ctx : Set :=
-| CtxLam
-| CtxApp1 (a : term)
-| CtxApp2 (a : term)
-| CtxPair1 (a : term)
-| CtxPair2 (a : term)
-| CtxFst
-| CtxSnd
-| CtxAbsurd
-| CtxInl
-| CtxInr
-| CtxMatch1 (bl : term) (br : term)
-| CtxMatch2 (a : term) (br : term)
-| CtxMatch3 (a : term) (bl : term)
-(* NO CtxGen! *)
-| CtxInst
+| CtxHole
+| CtxLam (c : Ctx)
+| CtxApp1 (c : Ctx) (a : term)
+| CtxApp2 (a : term) (c : Ctx)
+| CtxPair1 (c : Ctx) (a : term)
+| CtxPair2 (a : term) (c : Ctx)
+| CtxFst (c : Ctx)
+| CtxSnd (c : Ctx)
+| CtxAbsurd (c : Ctx)
+| CtxInl (c : Ctx)
+| CtxInr (c : Ctx)
+| CtxMatch1 (c : Ctx) (bl : term) (br : term)
+| CtxMatch2 (a : term) (c : Ctx) (br : term)
+| CtxMatch3 (a : term) (bl : term) (c : Ctx)
+| CtxAssume1 (c : Ctx) (a : term)
+| CtxAssume2 (a : term) (c : Ctx)
+| CtxHide (p : nat) (c : Ctx)
 .
 
-Definition fill c a :=
+Fixpoint fill c a :=
   match c with
-    | CtxLam => Lam a
-    | CtxApp1 b => App a b
-    | CtxApp2 b => App b a
-    | CtxPair1 b => Pair a b
-    | CtxPair2 b => Pair b a
-    | CtxFst => Fst a
-    | CtxSnd => Snd a
-    | CtxAbsurd => Absurd a
-    | CtxInl => Inl a
-    | CtxInr => Inr a
-    | CtxMatch1 b1 b2 => Match a b1 b2
-    | CtxMatch2 b1 b2 => Match b1 a b2
-    | CtxMatch3 b1 b2 => Match b1 b2 a
-    | CtxInst => Inst a
+    | CtxHole => a
+    | CtxLam c => Lam (fill c a)
+    | CtxApp1 c b => App (fill c a) b
+    | CtxApp2 b c => App b (fill c a)
+    | CtxPair1 c b => Pair (fill c a) b
+    | CtxPair2 b c => Pair b (fill c a)
+    | CtxFst c => Fst (fill c a)
+    | CtxSnd c => Snd (fill c a)
+    | CtxAbsurd c => Absurd (fill c a)
+    | CtxInl c => Inl (fill c a)
+    | CtxInr c => Inr (fill c a)
+    | CtxMatch1 c b1 b2 => Match (fill c a) b1 b2
+    | CtxMatch2 b1 c b2 => Match b1 (fill c a) b2
+    | CtxMatch3 b1 b2 c => Match b1 b2 (fill c a)
+    | CtxAssume1 c b => Assume (fill c a) b
+    | CtxAssume2 b c => Assume b (fill c a)
+    | CtxHide p c => Hide p (fill c a)
   end.
 
-Definition cdrop c :=
+Fixpoint guard c s :=
   match c with
-    | F.CtxLam => CtxLam
-    | F.CtxApp1 b => CtxApp1 (drop b)
-    | F.CtxApp2 b => CtxApp2 (drop b)
-    | F.CtxPair1 b => CtxPair1 (drop b)
-    | F.CtxPair2 b => CtxPair2 (drop b)
-    | F.CtxFst => CtxFst
-    | F.CtxSnd => CtxSnd
-    | F.CtxAbsurd => CtxAbsurd
-    | F.CtxInl => CtxInl
-    | F.CtxInr => CtxInr
-    | F.CtxMatch1 b1 b2 => CtxMatch1 (drop b1) (drop b2)
-    | F.CtxMatch2 b1 b2 => CtxMatch2 (drop b1) (drop b2)
-    | F.CtxMatch3 b1 b2 => CtxMatch3 (drop b1) (drop b2)
-    | F.CtxInst => CtxInst
+    | CtxHole => s
+    | CtxLam c => guard c s
+    | CtxApp1 c b => guard c s
+    | CtxApp2 b c => guard c s
+    | CtxPair1 c b => guard c s
+    | CtxPair2 b c => guard c s
+    | CtxFst c => guard c s
+    | CtxSnd c => guard c s
+    | CtxAbsurd c => guard c s
+    | CtxInl c => guard c s
+    | CtxInr c => guard c s
+    | CtxMatch1 c b1 b2 => guard c s
+    | CtxMatch2 b1 c b2 => guard c s
+    | CtxMatch3 b1 b2 c => guard c s
+    | CtxAssume1 c b => guard c s
+    | CtxAssume2 b c => guard c (1 + s)
+    | CtxHide p c => guard c (s - 1) (* We only care about [guard c 0 = 0]. *)
   end.
 
-Lemma drop_fill : forall c k a, drop (F.fill c k a) = fill (cdrop c) (drop a).
-Proof. induction c; intros; reflexivity. Qed.
+Definition unguarded c := if eq_nat_dec (guard c 0) 0 then True else False.
 
-(** The reduction relation [red] contains reduction under evaluation
-contexts and reduction of redexes. We show how the reduction of the
-Indexed Calculus and the reduction of the Lambda Calculus bisimulate.
+(** The reduction relation [hred] contains head reduction.
 *)
-Inductive red : term -> term -> Prop :=
-| RedCtx : forall a a' c, red a a' -> red (fill c a) (fill c a')
-| RedApp : forall a b, red (App (Lam a) b) (subst b 0 a)
-| RedFst : forall a b, red (Fst (Pair a b)) a
-| RedSnd : forall a b, red (Snd (Pair a b)) b
-| RedInl : forall a bl br, red (Match (Inl a) bl br) (subst a 0 bl)
-| RedInr : forall a bl br, red (Match (Inr a) bl br) (subst a 0 br)
-| RedInst : forall a, red (Inst (Gen a)) a
+Inductive hred : term -> term -> Prop :=
+| HRedApp : forall a b, hred (App (Lam a) b) (subst b 0 0 a)
+| HRedFst : forall a b, hred (Fst (Pair a b)) a
+| HRedSnd : forall a b, hred (Snd (Pair a b)) b
+| HRedInl : forall a bl br, hred (Match (Inl a) bl br) (subst a 0 0 bl)
+| HRedInr : forall a bl br, hred (Match (Inr a) bl br) (subst a 0 0 br)
+| HRedProp : forall a, hred (Assume Witness a) (unhide 0 a)
 .
 
-(** The reduction of the Lambda Calculus simulates the reduction of
-the Indexed Calculus.
-*)
-Lemma red_drop : forall a b, F.red a b -> red (drop a) (drop b).
-Proof.
-intros a b Hred; induction Hred; [destruct c|..]; simpl in *;
-repeat (match goal with | H : _ /\ _ |- _ => destruct H end).
-(* 20: CtxLam *)
-  apply RedCtx with (c := CtxLam); auto.
-(* 19: CtxApp1 *)
-  apply RedCtx with (c := CtxApp1 (drop b)); auto.
-(* 18: CtxApp2 *)
-  apply RedCtx with (c := CtxApp2 (drop a0)); auto.
-(* 17: CtxPair1 *)
-  apply RedCtx with (c := CtxPair1 (drop b)); auto.
-(* 16: CtxPair2 *)
-  apply RedCtx with (c := CtxPair2 (drop a0)); auto.
-(* 15: CtxFst *)
-  apply RedCtx with (c := CtxFst); auto.
-(* 14: CtxSnd *)
-  apply RedCtx with (c := CtxSnd); auto.
-(* 13: CtxAbsurd *)
-  apply RedCtx with (c := CtxAbsurd); auto.
-(* 12: CtxInl *)
-  apply RedCtx with (c := CtxInl); auto.
-(* 11: CtxInr *)
-  apply RedCtx with (c := CtxInr); auto.
-(* 10: CtxMatch1 *)
-  apply RedCtx with (c := CtxMatch1 (drop bl) (drop br)); auto.
-(* 9: CtxMatch2 *)
-  apply RedCtx with (c := CtxMatch2 (drop a0) (drop br)); auto.
-(* 8: CtxMatch3 *)
-  apply RedCtx with (c := CtxMatch3 (drop a0) (drop bl)); auto.
-(* 7: CtxInst *)
-  apply RedCtx with (c := CtxInst); auto.
-(* 6: App *) rewrite drop_lower; rewrite drop_subst; apply RedApp.
-(* 5: Fst *) rewrite drop_lower; apply RedFst.
-(* 4: Snd *) rewrite drop_lower; apply RedSnd.
-(* 3: Inl *) rewrite drop_lower; rewrite drop_subst; apply RedInl.
-(* 2: Inr *) rewrite drop_lower; rewrite drop_subst; apply RedInr.
-(* 1: Inst *) rewrite drop_lower; apply RedInst.
-Qed.
-
-(** The reduction of the Indexed Calculus can simulate the reduction
-of the Lambda Calculus given that the initial indexed term has enough
-fuel (a fuel strictly positive).
-*)
-Lemma drop_red_exists : forall k a b', term_ge a (1 + k) -> red (drop a) b' ->
-  exists b, b' = drop b /\ F.red a b.
-Proof.
-intros k a b' ak Hred; remember (drop a) as a'.
-generalize a ak Heqa'; clear a ak Heqa'; induction Hred; [destruct c|..];
-try (rename a into ar); intros a ak Heqa';
-destruct a; inversion Heqa'; clear Heqa'; simpl in ak; subst;
-repeat (match goal with
-  | H : ?k >= S _ |- _ => is_var k; destruct k; [inversion H|]
-  | H : _ /\ _ |- _ => destruct H
-  | H : term_ge ?a (S k),
-    IH : forall _, _ -> drop ?a = _ -> _
-      |- _ => destruct (IH a H eq_refl) as [? [? ?]]; clear IH
-end); subst; simpl in *.
-(* 20: CtxLam *)
-  exists (F.Lam k0 x); split; auto.
-  apply F.RedCtx with (c := F.CtxLam); auto.
-(* 19: CtxApp1 *)
-  exists (F.App k0 x a2); split; auto.
-  apply F.RedCtx with (c := F.CtxApp1 a2); auto.
-(* 18: CtxApp2 *)
-  exists (F.App k0 a1 x); split; auto.
-  apply F.RedCtx with (c := F.CtxApp2 a1); auto.
-(* 17: CtxPair1 *)
-  exists (F.Pair k0 x a2); split; auto.
-  apply F.RedCtx with (c := F.CtxPair1 a2); auto.
-(* 16: CtxPair2 *)
-  exists (F.Pair k0 a1 x); split; auto.
-  apply F.RedCtx with (c := F.CtxPair2 a1); auto.
-(* 15: CtxFst *)
-  exists (F.Fst k0 x); split; auto.
-  apply F.RedCtx with (c := F.CtxFst); auto.
-(* 14: CtxSnd *)
-  exists (F.Snd k0 x); split; auto.
-  apply F.RedCtx with (c := F.CtxSnd); auto.
-(* 13: CtxAbsurd *)
-  exists (F.Absurd k0 x); split; auto.
-  apply F.RedCtx with (c := F.CtxAbsurd); auto.
-(* 12: CtxInl *)
-  exists (F.Inl k0 x); split; auto.
-  apply F.RedCtx with (c := F.CtxInl); auto.
-(* 11: CtxInr *)
-  exists (F.Inr k0 x); split; auto.
-  apply F.RedCtx with (c := F.CtxInr); auto.
-(* 10: CtxMatch1 *)
-  exists (F.Match k0 x a2 a3); split; auto.
-  apply F.RedCtx with (c := F.CtxMatch1 a2 a3); auto.
-(* 9: CtxMatch2 *)
-  exists (F.Match k0 a1 x a3); split; auto.
-  apply F.RedCtx with (c := F.CtxMatch2 a1 a3); auto.
-(* 8: CtxMatch3 *)
-  exists (F.Match k0 a1 a2 x); split; auto.
-  apply F.RedCtx with (c := F.CtxMatch3 a1 a2); auto.
-(* 7: CtxInst *)
-  exists (F.Inst k0 x); split; auto.
-  apply F.RedCtx with (c := F.CtxInst); auto.
-(* 5: App *)
-  destruct a1; inversion H0; clear H0; subst.
-  destruct H1; destruct k1; [inversion H0|].
-  exists (lower (min k0 k1) (F.subst a2 0 a1)); simpl; split; auto using F.red.
-  rewrite <- drop_subst; rewrite drop_lower; reflexivity.
-(* 5: Fst *)
-  destruct a; inversion H0; clear H0; subst.
-  destruct H1 as [? [? ?]]; destruct k1; [inversion H0|].
-  exists (lower (min k0 k1) a1); simpl; split; auto using F.red.
-  rewrite drop_lower; reflexivity.
-(* 4: Snd *)
-  destruct a; inversion H0; clear H0; subst.
-  destruct H1 as [? [? ?]]; destruct k1; [inversion H0|].
-  exists (lower (min k0 k1) a2); simpl; split; auto using F.red.
-  rewrite drop_lower; reflexivity.
-(* 3: Inl *)
-  destruct a1; inversion H0; clear H0; subst.
-  destruct H1; destruct k1; [inversion H0|].
-  exists (lower (min k0 k1) (F.subst a1 0 a2)); simpl; split; auto using F.red.
-  rewrite <- drop_subst; rewrite drop_lower; reflexivity.
-(* 2: Inr *)
-  destruct a1; inversion H0; clear H0; subst.
-  destruct H1; destruct k1; [inversion H0|].
-  exists (lower (min k0 k1) (F.subst a1 0 a3)); simpl; split; auto using F.red.
-  rewrite <- drop_subst; rewrite drop_lower; reflexivity.
-(* 1: Inst *)
-  destruct a; inversion H0; clear H0; subst.
-  destruct H1; destruct k1; [inversion H0|].
-  exists (lower (min k0 k1) a); simpl; split; auto using F.red.
-  rewrite drop_lower; reflexivity.
-Qed.
+Inductive cred : term -> term -> Prop :=
+| CRed : forall a b c, hred a b -> unguarded c -> cred (fill c a) (fill c b)
+.
 
 (** ** Errors and valid terms *)
 
 (** In order to define the notions of errors and valid terms, we need
 to define the notions of neutral terms and head normal forms. Neutral
-terms [N] are either variables and destructors, while head normal
-forms [CN] are constructors.
+terms [N] are either variables or destructors, while head normal forms
+[CN] are constructors.
 *)
 Definition N : set := fun a =>
   match a with
@@ -404,8 +268,9 @@ Definition N : set := fun a =>
     | Inl _ => False
     | Inr _ => False
     | Match _ _ _ => True
-    | Gen _ => False
-    | Inst _ => True
+    | Witness => False
+    | Assume _ _ => True
+    | Hide _ _ => True
   end.
 
 Definition CN : set := fun a =>
@@ -421,8 +286,9 @@ Definition CN : set := fun a =>
     | Inl _ => True
     | Inr _ => True
     | Match _ _ _ => False
-    | Gen _ => True
-    | Inst _ => False
+    | Witness => True
+    | Assume _ _ => False
+    | Hide _ _ => False
   end.
 Hint Unfold N CN.
 
@@ -435,177 +301,64 @@ Proof. destruct a; simpl; auto. Qed.
 Lemma CN_N : forall a, CN a -> N a -> False.
 Proof. destruct a; auto. Qed.
 
-Lemma CN_red : forall a b, red a b -> CN a -> CN b.
+Lemma CN_hred : forall a b, hred a b -> CN a -> False.
+Proof.
+induction 1; intros CNa; simpl in CNa; assumption.
+Qed.
+
+Lemma CN_cred : forall a b, cred a b -> CN a -> CN b.
 Proof.
 induction 1; intros CNa; simpl in CNa; try (exfalso; exact CNa).
 destruct c; simpl in *; auto.
+exfalso; apply (CN_hred _ _ H CNa).
 Qed.
 
-(** We show that neutral terms and head normal forms commute with
-[drop], ie. they correspond between both calculi.
-*)
-Lemma CN_drop : forall a, F.CN a <-> CN (drop a).
-Proof. induction a; split; intros Ha; simpl; auto. Qed.
-
-Lemma N_drop : forall a, F.N a <-> N (drop a).
-Proof. induction a; split; intros Ha; simpl; auto. Qed.
-
 (** We define predicates to know when a term is not the constructor of
-the arrow type, the product type, or the pi type. And we show that
-they correspond to their indexed version.
+the arrow type, the product type, or the proposition type.
 *)
 Definition NotArr a := forall a', a <> Lam a'.
 Definition NotProd a := forall a' b', a <> Pair a' b'.
 Definition NotSum a := forall a', a <> Inl a' /\ a <> Inr a'.
-Definition NotPi a := forall a', a <> Gen a'.
-Hint Unfold NotArr NotProd NotSum NotPi.
+Definition NotProp a := a <> Witness.
+Hint Unfold NotArr NotProd NotSum NotProp.
 
-Lemma NotArr_drop : forall a, F.NotArr a <-> NotArr (drop a).
-Proof.
-split; intros Ha.
-(* *)
-  intros a' Heq.
-  destruct a; inversion Heq; clear Heq; subst.
-  apply (Ha k a eq_refl).
-(* *)
-  intros k' a' Heq.
-  destruct a; inversion Heq; clear Heq; subst.
-  apply (Ha (drop a') eq_refl).
-Qed.
-
-Lemma NotProd_drop : forall a, F.NotProd a <-> NotProd (drop a).
-Proof.
-split; intros Ha.
-(* *)
-  intros a' b' Heq.
-  destruct a; inversion Heq; clear Heq; subst.
-  apply (Ha k a1 a2 eq_refl).
-(* *)
-  intros k' a' b' Heq.
-  destruct a; inversion Heq; clear Heq; subst.
-  apply (Ha (drop a') (drop b') eq_refl).
-Qed.
-
-Lemma NotSum_drop : forall a, F.NotSum a <-> NotSum (drop a).
-Proof.
-split; intros Ha.
-(* *)
-  intros a'; split; intros Heq;
-  destruct a; inversion Heq; clear Heq; subst.
-  apply (proj1 (Ha k a) eq_refl).
-  apply (proj2 (Ha k a) eq_refl).
-(* *)
-  intros k' a'; split; intros Heq;
-  destruct a; inversion Heq; clear Heq; subst.
-  apply (proj1 (Ha (drop a')) eq_refl).
-  apply (proj2 (Ha (drop a')) eq_refl).
-Qed.
-
-Lemma NotPi_drop : forall a, F.NotPi a <-> NotPi (drop a).
-Proof.
-split; intros Ha.
-(* *)
-  intros a' Heq.
-  destruct a; inversion Heq; clear Heq; subst.
-  apply (Ha k a eq_refl).
-(* *)
-  intros k' a' Heq.
-  destruct a; inversion Heq; clear Heq; subst.
-  apply (Ha (drop a') eq_refl).
-Qed.
-
-(** We can now define the set of errors [Err]. An error is either an
-immediate error or an error under any evaluation context. An immediate
-error happens when a destructor is applied to a wrong constructor. For
+(** We can now define the set of head errors [HErr]. A head error
+happens when a destructor is applied to a wrong constructor. For
 example, the term [App a b] is an error if the term [a] is a
 constructor which is not of the arrow type, because [App] is the
-destructor of the arrow type. Lambda errors correspond with their
-indexed version.
+destructor of the arrow type.
 *)
-Inductive Err : set :=
-| ErrCtx : forall e c, Err e -> Err (fill c e)
-| ErrApp : forall a b, CN a -> NotArr a -> Err (App a b)
-| ErrFst : forall a, CN a -> NotProd a -> Err (Fst a)
-| ErrSnd : forall a, CN a -> NotProd a -> Err (Snd a)
-| ErrAbsurd : forall a, CN a -> Err (Absurd a)
-| ErrMatch : forall a bl br, CN a -> NotSum a -> Err (Match a bl br)
-| ErrInst : forall a, CN a -> NotPi a -> Err (Inst a)
+Inductive HErr : set :=
+| HErrApp : forall a b, CN a -> NotArr a -> HErr (App a b)
+| HErrFst : forall a, CN a -> NotProd a -> HErr (Fst a)
+| HErrSnd : forall a, CN a -> NotProd a -> HErr (Snd a)
+| HErrAbsurd : forall a, CN a -> HErr (Absurd a)
+| HErrMatch : forall a bl br, CN a -> NotSum a -> HErr (Match a bl br)
+| HErrInst : forall a b, CN a -> NotProp a -> HErr (Assume a b)
 .
 
-Lemma Err_drop : forall a, F.Err a <-> Err (drop a).
-Proof.
-split.
-(* -> *)
-  intros H; induction H; simpl.
-  (* ErrCtx *) rewrite drop_fill; apply ErrCtx; auto.
-  (* ErrApp *) apply ErrApp; [apply CN_drop|apply NotArr_drop]; auto.
-  (* ErrFst *) apply ErrFst; [apply CN_drop|apply NotProd_drop]; auto.
-  (* ErrSnd *) apply ErrSnd; [apply CN_drop|apply NotProd_drop]; auto.
-  (* ErrAbsurd *) apply ErrAbsurd; apply CN_drop; auto.
-  (* ErrMatch *) apply ErrMatch; [apply CN_drop|apply NotSum_drop]; auto.
-  (* ErrInst *) apply ErrInst; [apply CN_drop|apply NotPi_drop]; auto.
-(* <- *)
-  remember (drop a) as b.
-  intros H; generalize a Heqb; clear a Heqb.
-  induction H; simpl; intros.
-  (* ErrCtx *)
-    destruct c; destruct a; inversion Heqb; clear Heqb.
-    apply F.ErrCtx with (c := F.CtxLam); auto.
-    apply F.ErrCtx with (c := F.CtxApp1 a2); auto.
-    apply F.ErrCtx with (c := F.CtxApp2 a1); auto.
-    apply F.ErrCtx with (c := F.CtxPair1 a2); auto.
-    apply F.ErrCtx with (c := F.CtxPair2 a1); auto.
-    apply F.ErrCtx with (c := F.CtxFst); auto.
-    apply F.ErrCtx with (c := F.CtxSnd); auto.
-    apply F.ErrCtx with (c := F.CtxAbsurd); auto.
-    apply F.ErrCtx with (c := F.CtxInl); auto.
-    apply F.ErrCtx with (c := F.CtxInr); auto.
-    apply F.ErrCtx with (c := F.CtxMatch1 a2 a3); auto.
-    apply F.ErrCtx with (c := F.CtxMatch2 a1 a3); auto.
-    apply F.ErrCtx with (c := F.CtxMatch3 a1 a2); auto.
-    apply F.ErrCtx with (c := F.CtxInst); auto.
-  (* ErrApp *)
-    destruct a0; inversion Heqb; clear Heqb; subst.
-    apply F.ErrApp; [apply CN_drop|apply NotArr_drop]; auto.
-  (* ErrFst *)
-    destruct a0; inversion Heqb; clear Heqb; subst.
-    apply F.ErrFst; [apply CN_drop|apply NotProd_drop]; auto.
-  (* ErrSnd *)
-    destruct a0; inversion Heqb; clear Heqb; subst.
-    apply F.ErrSnd; [apply CN_drop|apply NotProd_drop]; auto.
-  (* ErrAbsurd *)
-    destruct a0; inversion Heqb; clear Heqb; subst.
-    apply F.ErrAbsurd; apply CN_drop; auto.
-  (* ErrMatch *)
-    destruct a0; inversion Heqb; clear Heqb; subst.
-    apply F.ErrMatch; [apply CN_drop|apply NotSum_drop]; auto.
-  (* ErrInst *)
-    destruct a0; inversion Heqb; clear Heqb; subst.
-    apply F.ErrInst; [apply CN_drop|apply NotPi_drop]; auto.
-Qed.
+Inductive CErr : set :=
+| CErrCtx : forall a c, HErr a -> unguarded c -> CErr (fill c a)
+.
 
-(** Valid terms are simply the complementary of errors and they
-correspond with their indexed version.
+(** Valid terms are simply the complementary of errors.
 *)
-Definition V : set := Cmp Err.
+Definition V : set := Cmp CErr.
 Hint Unfold V.
-
-Lemma V_drop : forall a, F.V a <-> V (drop a).
-Proof. induction a; split; intros Ha Erra; apply Err_drop in Erra; auto. Qed.
 
 (** ** Strong normalization *)
 Inductive SN : set :=
-| SN_ : forall a, (forall b, red a b -> SN b) -> SN a
+| SN_ : forall a, (forall b, cred a b -> SN b) -> SN a
 .
 
-Lemma ExpSN : forall a, SN a -> forall b, red a b -> SN b.
+Lemma ExpSN : forall a, SN a -> forall b, cred a b -> SN b.
 Proof. intros; destruct H; auto. Qed.
 
 (** ** Properties about lift and subst *)
 
-Lemma lift_0 : forall a i, lift 0 i a = a.
-Proof. induction a; intros i; simpl; [subst_lift_var|..]; f_equal; auto. Qed.
-
+Lemma lift_0 : forall a i j, lift 0 i j a = a.
+Proof. induction a; intros i j; simpl; [subst_lift_var|..]; f_equal; auto. Qed.
+(*
 Lemma lift_lift : forall a d i j l, lift d (j + l) (lift (i + j) l a) = lift (i + d + j) l a.
 Proof.
 induction a; intros d i j l; simpl; auto; [| |f_equal; auto ..].
@@ -721,40 +474,64 @@ intros a a' b Hred; induction Hred; [destruct c|..]; intros i; simpl.
 (* 2: Inr *) rewrite subst_subst_0; apply RedInr.
 (* 1: Inst *) apply RedInst.
 Qed.
-
+*)
 (** ** Values *)
 
 (** We mutually define the set of prevalues 'value False' and values
 'value True'.
 *)
-Fixpoint value v a :=
+Inductive value_guard :=
+| VClosed (v : Prop)
+| VGuarded (g : value_guard)
+.
+
+Definition vn v j :=
+  match j with
+    | VClosed _ => VClosed v
+    | j => j
+  end.
+
+Definition vx j :=
+  match j with
+    | VClosed v => v
+    | j => True
+  end.
+
+Fixpoint value j a :=
   match a with
     | Var _ => True
-    | Lam a => v /\ value True a
-    | App a b  => value False a /\ value True b
-    | Unit => v
-    | Pair a b => v /\ value True a /\ value True b
-    | Fst a => value False a
-    | Snd a => value False a
-    | Absurd a => value False a
-    | Inl a => v /\ value True a
-    | Inr a => v /\ value True a
-    | Match a bl br => value False a /\ value True bl /\ value True br
-    | Gen a  => v
-    | Inst a  => value False a
+    | Lam a => vx j /\ value (vn True j) a
+    | App a b  => value (vn False j) a /\ value (vn True j) b
+    | Unit => vx j
+    | Pair a b => vx j /\ value (vn True j) a /\ value (vn True j) b
+    | Fst a => value (vn False j) a
+    | Snd a => value (vn False j) a
+    | Absurd a => value (vn False j) a
+    | Inl a => vx j /\ value (vn True j) a
+    | Inr a => vx j /\ value (vn True j) a
+    | Match a bl br => value (vn False j) a /\ value (vn True j) bl /\ value (vn True j) br
+    | Witness  => vx j
+    | Assume a b  => value (vn False j) a /\ value (VGuarded j) b
+    | Hide _ a  =>
+      match j with
+        | VClosed _ => value (VClosed True) a
+        | VGuarded (VClosed _) => value (VClosed True) a
+        | VGuarded j => value j a
+      end
   end.
 
 (** Irreducible terms. *)
-Definition irred a := forall b, red a b -> False.
+Definition irred a := forall b, cred a b -> False.
 Hint Unfold irred.
 
 (** Prevalues are values. *)
-Lemma prevalue_is_value : forall a, value False a -> value True a.
+Lemma prevalue_is_value : forall a, value (VClosed False) a -> value (VClosed True) a.
 Proof.
 induction a; simpl; intros; auto;
 repeat (match goal with
   | H1 : _ /\ _ |- _ => destruct H1
 end; auto).
+split; auto.
 Qed.
 
 (** Neutral values are prevalues. *)
@@ -774,7 +551,7 @@ repeat (match goal with
   | H1 : _ /\ _ |- _ => destruct H1
 end; auto).
 Qed.
-
+(*
 Ltac progre_aux0 ctx :=
   match goal with
     | |- irred _ => intros b Hred;
@@ -801,13 +578,17 @@ Ltac progre_aux1 :=
     | Va : V _, ia : irred _ |- N ?a => destruct a; simpl; auto;
       try solve [eapply ia; auto using red]
   end.
-
+*)
 (** Values are irreducible valid terms. *)
 Lemma progre : forall a, irred a -> V a -> value True a.
 Proof.
 induction a; intros ia Va; repeat split; auto.
-(* 14: CtxLam *)
-  apply IHa; progre_aux0 CtxLam.
+{ (* CtxLam *)
+  apply IHa.
+  intros b Hred.
+  inversion Hred.
+
+; progre_aux0 CtxLam. }
 (* 13: CtxApp1 *)
   apply Nvalue_is_prevalue;
   [ apply IHa1; progre_aux0 (CtxApp1 a2)
@@ -876,4 +657,3 @@ repeat (match goal with
   |- False => apply (CNprevalue_is_absurd a)
 end; auto).
 Qed.
-
