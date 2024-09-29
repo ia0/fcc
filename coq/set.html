@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link href="coqdoc.css" rel="stylesheet" type="text/css"/>
+<title>set</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library set</h1>
+
+<div class="code">
+<span class="id" type="keyword">Require</span> <span class="id" type="keyword">Import</span> <a class="idref" href="ext.html#"><span class="id" type="library">ext</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Inductive</span> <a name="set_v"><span class="id" type="inductive">set_v</span></a> := .<br/>
+</div>
+
+<div class="doc">
+<a name="lab113"></a><h4 class="section">Links: <span class="inlinecode"><a class="idref" href="Index.html#Index_v"><span class="id" type="inductive">Index_v</span></a></span> <a href="Toc.html">Table of contents</a> <a href="../">Main page</a></h4>
+
+<div class="paragraph"> </div>
+
+ This file defines the notion of sets we will use in the
+formalization.
+
+<div class="paragraph"> </div>
+
+ A <span class="inlinecode"><span class="id" type="tactic">set</span></span> of elements of type <span class="inlinecode"><a class="idref" href="ext.html#A"><span class="id" type="variable">A</span></a></span> is a predicate in <span class="inlinecode"><span class="id" type="keyword">Prop</span></span> over <span class="inlinecode"><a class="idref" href="ext.html#A"><span class="id" type="variable">A</span></a></span>.
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Definition</span> <a name="set"><span class="id" type="definition">set</span></a> {<span class="id" type="var">A</span>} := <a class="idref" href="set.html#A"><span class="id" type="variable">A</span></a> → <span class="id" type="keyword">Prop</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+We define intersections <span class="inlinecode"><a class="idref" href="set.html#Inter"><span class="id" type="definition">Inter</span></a></span>, complements <span class="inlinecode"><a class="idref" href="set.html#Cmp"><span class="id" type="definition">Cmp</span></a></span>, unions
+<span class="inlinecode"><a class="idref" href="set.html#Union"><span class="id" type="definition">Union</span></a></span>, inclusions <span class="inlinecode"><a class="idref" href="set.html#Inc"><span class="id" type="definition">Inc</span></a></span>, and equalities <span class="inlinecode"><a class="idref" href="set.html#Eq"><span class="id" type="definition">Eq</span></a></span>.
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Definition</span> <a name="Inter"><span class="id" type="definition">Inter</span></a> {<span class="id" type="var">A</span>} (<span class="id" type="var">R</span> <span class="id" type="var">S</span> : @<a class="idref" href="set.html#set"><span class="id" type="definition">set</span></a> <a class="idref" href="set.html#A"><span class="id" type="variable">A</span></a>) : <a class="idref" href="set.html#set"><span class="id" type="definition">set</span></a> := <span class="id" type="keyword">fun</span> <span class="id" type="var">a</span> ⇒ <a class="idref" href="set.html#R"><span class="id" type="variable">R</span></a> <a class="idref" href="set.html#a"><span class="id" type="variable">a</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'/\'_x"><span class="id" type="notation">∧</span></a> <a class="idref" href="set.html#S"><span class="id" type="variable">S</span></a> <a class="idref" href="set.html#a"><span class="id" type="variable">a</span></a>.<br/>
+<span class="id" type="keyword">Hint Unfold</span> <a class="idref" href="set.html#Inter"><span class="id" type="definition">Inter</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="Cmp"><span class="id" type="definition">Cmp</span></a> {<span class="id" type="var">A</span>} (<span class="id" type="var">R</span> : @<a class="idref" href="set.html#set"><span class="id" type="definition">set</span></a> <a class="idref" href="set.html#A"><span class="id" type="variable">A</span></a>) : <a class="idref" href="set.html#set"><span class="id" type="definition">set</span></a> := <span class="id" type="keyword">fun</span> <span class="id" type="var">a</span> ⇒ <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:'~'_x"><span class="id" type="notation">¬</span></a> <a class="idref" href="set.html#R"><span class="id" type="variable">R</span></a> <a class="idref" href="set.html#a"><span class="id" type="variable">a</span></a>.<br/>
+<span class="id" type="keyword">Hint Unfold</span> <a class="idref" href="set.html#Cmp"><span class="id" type="definition">Cmp</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="Union"><span class="id" type="definition">Union</span></a> {<span class="id" type="var">A</span>} (<span class="id" type="var">R</span> <span class="id" type="var">S</span> : @<a class="idref" href="set.html#set"><span class="id" type="definition">set</span></a> <a class="idref" href="set.html#A"><span class="id" type="variable">A</span></a>) : <a class="idref" href="set.html#set"><span class="id" type="definition">set</span></a> := <span class="id" type="keyword">fun</span> <span class="id" type="var">a</span> ⇒ <a class="idref" href="set.html#R"><span class="id" type="variable">R</span></a> <a class="idref" href="set.html#a"><span class="id" type="variable">a</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'\/'_x"><span class="id" type="notation">∨</span></a> <a class="idref" href="set.html#S"><span class="id" type="variable">S</span></a> <a class="idref" href="set.html#a"><span class="id" type="variable">a</span></a>.<br/>
+<span class="id" type="keyword">Hint Unfold</span> <a class="idref" href="set.html#Union"><span class="id" type="definition">Union</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="Inc"><span class="id" type="definition">Inc</span></a> {<span class="id" type="var">A</span>} (<span class="id" type="var">R</span> <span class="id" type="var">S</span> : @<a class="idref" href="set.html#set"><span class="id" type="definition">set</span></a> <a class="idref" href="set.html#A"><span class="id" type="variable">A</span></a>) := <span class="id" type="keyword">∀</span> <span class="id" type="var">a</span>, <a class="idref" href="set.html#R"><span class="id" type="variable">R</span></a> <a class="idref" href="set.html#a"><span class="id" type="variable">a</span></a> → <a class="idref" href="set.html#S"><span class="id" type="variable">S</span></a> <a class="idref" href="set.html#a"><span class="id" type="variable">a</span></a>.<br/>
+<span class="id" type="keyword">Hint Unfold</span> <a class="idref" href="set.html#Inc"><span class="id" type="definition">Inc</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="Eq"><span class="id" type="definition">Eq</span></a> {<span class="id" type="var">A</span>} (<span class="id" type="var">R</span> <span class="id" type="var">S</span> : @<a class="idref" href="set.html#set"><span class="id" type="definition">set</span></a> <a class="idref" href="set.html#A"><span class="id" type="variable">A</span></a>) := <a class="idref" href="set.html#Inc"><span class="id" type="definition">Inc</span></a> <a class="idref" href="set.html#R"><span class="id" type="variable">R</span></a> <a class="idref" href="set.html#S"><span class="id" type="variable">S</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'/\'_x"><span class="id" type="notation">∧</span></a> <a class="idref" href="set.html#Inc"><span class="id" type="definition">Inc</span></a> <a class="idref" href="set.html#S"><span class="id" type="variable">S</span></a> <a class="idref" href="set.html#R"><span class="id" type="variable">R</span></a>.<br/>
+<span class="id" type="keyword">Hint Unfold</span> <a class="idref" href="set.html#Eq"><span class="id" type="definition">Eq</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+We define the extensionality on <span class="inlinecode"><span class="id" type="tactic">set</span></span>s which lifts the <span class="inlinecode"><span class="id" type="tactic">set</span></span>
+equality <span class="inlinecode"><a class="idref" href="set.html#Eq"><span class="id" type="definition">Eq</span></a></span> to the equality of Coq.
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Lemma</span> <a name="extEq"><span class="id" type="lemma">extEq</span></a> : <span class="id" type="keyword">∀</span> {<span class="id" type="var">A</span>} (<span class="id" type="var">R</span> <span class="id" type="var">S</span> : @<a class="idref" href="set.html#set"><span class="id" type="definition">set</span></a> <a class="idref" href="set.html#A"><span class="id" type="variable">A</span></a>), <a class="idref" href="set.html#Eq"><span class="id" type="definition">Eq</span></a> <a class="idref" href="set.html#R"><span class="id" type="variable">R</span></a> <a class="idref" href="set.html#S"><span class="id" type="variable">S</span></a> → <a class="idref" href="set.html#R"><span class="id" type="variable">R</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="set.html#S"><span class="id" type="variable">S</span></a>.<br/>
+<span class="id" type="keyword">Proof</span>.<br/>
+<span class="id" type="tactic">intros</span> <span class="id" type="var">A</span> <span class="id" type="var">R</span> <span class="id" type="var">S</span> [<span class="id" type="var">RS</span> <span class="id" type="var">SR</span>].<br/>
+<span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Logic.FunctionalExtensionality.html#functional_extensionality"><span class="id" type="lemma">functional_extensionality</span></a>; <span class="id" type="tactic">intros</span> <span class="id" type="var">x</span>.<br/>
+<span class="id" type="tactic">apply</span> <a class="idref" href="ext.html#propositional_extensionality"><span class="id" type="axiom">propositional_extensionality</span></a>; <span class="id" type="tactic">split</span>; <span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+</div>
+
+<div class="doc">
+<a name="lab114"></a><h4 class="section">Links: <span class="inlinecode"><a class="idref" href="Index.html#Index_v"><span class="id" type="inductive">Index_v</span></a></span> <a href="Toc.html">Table of contents</a> <a href="../">Main page</a></h4>
+
+</div>
+<div class="code">
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

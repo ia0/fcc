@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Defense informations</title>
+</head>
+<body style="max-width: 600px;">
+
+<h1>Erasable coercions:<br>a unified approach to type systems</h1>
+
+<h2>Defense informations</h2>
+
+<p>
+The defense took place on the 30th of January, 2014 at 14:30 in
+room 227C of <a target="_blank"
+href="http://maps.google.com/?ll=48.828944,2.381608&spn=0.001647,0.004123&t=m&z=19&layer=c&cbll=48.828944,2.381608&panoid=VShzaRKrdCNUQzQhHwinkw&cbp=12,320.43,,0,3.22">Paris
+7 University</a>:
+<pre>
+Hall aux Farines
+16 rue Françoise Dolto
+75013 Paris
+</pre>
+The slides are available <a href="slides.pdf" download>here</a>.
+</p>
+
+<h3>Abstract</h3>
+
+<p style="text-align: justify;">
+Functional programming languages, like OCaml or Haskell, rely on the
+Lambda Calculus for their core language. Although they have different
+reduction strategies and type system features, their proof of
+soundness and normalization (in the absence of recursion) should be
+factorizable. This thesis does such a factorization for theoretical
+type systems featuring recursive types, subtyping, bounded
+polymorphism, and constraint polymorphism. Interestingly, soundness
+and normalization for strong reduction imply soundness and
+normalization for all usual strategies. Our observation is that a
+generalization of existing coercions permits to describe all type
+system features stated above in an erasable and composable way. We
+illustrate this by proposing two concrete type systems: first, an
+explicit type system with a restricted form of coercion abstraction to
+express subtyping and bounded polymorphism; and an implicit type
+system with unrestricted coercion abstraction that generalizes the
+explicit type system with recursive types and constraint
+polymorphism&mdash;but without the subject reduction property. A side
+technical result is an adaptation of the step-indexed proof technique
+for type-soundness to calculi equipped with a strong notion of
+reduction.
+</p>
+
+<h2>PhD informations</h2>
+
+<p>
+The manuscript and formalization (coq files and documentation) can be
+found at <a href="http://phd.ia0.fr/">http://phd.ia0.fr/</a> .
+</p>
+
+</body>
+
+</html>

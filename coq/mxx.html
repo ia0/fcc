@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link href="coqdoc.css" rel="stylesheet" type="text/css"/>
+<title>mxx</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library mxx</h1>
+
+<div class="code">
+<span class="id" type="keyword">Inductive</span> <a name="mxx_v"><span class="id" type="inductive">mxx_v</span></a> := .<br/>
+</div>
+
+<div class="doc">
+<a name="lab111"></a><h4 class="section">Links: <span class="inlinecode"><a class="idref" href="Index.html#Index_v"><span class="id" type="inductive">Index_v</span></a></span> <a href="Toc.html">Table of contents</a> <a href="../">Main page</a></h4>
+
+<div class="paragraph"> </div>
+
+ The versions of the type system:
+
+<div class="paragraph"> </div>
+
+<ul class="doclist">
+<li> <span class="inlinecode"><a class="idref" href="Fnormalization.html#P"><span class="id" type="variable">P</span></a></span> is the paper versions,
+
+</li>
+<li> <span class="inlinecode"><a class="idref" href="Llanguage.html#F"><span class="id" type="module">F</span></a></span> is the full version, and
+
+</li>
+<li> <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#S"><span class="id" type="constructor">S</span></a></span> is the soundness version.
+
+</li>
+</ul>
+Versions <span class="inlinecode"><span class="id" type="var">E</span></span> and <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#S"><span class="id" type="constructor">S</span></a></span> have the same rules, but <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#S"><span class="id" type="constructor">S</span></a></span> may ask less
+premises. Version <span class="inlinecode"><a class="idref" href="Fnormalization.html#P"><span class="id" type="variable">P</span></a></span> does not have the same rules as <span class="inlinecode"><span class="id" type="var">E</span></span> and may have
+less premises for the common rules. We want <span class="inlinecode"><a class="idref" href="Fnormalization.html#P"><span class="id" type="variable">P</span></a></span> to have small
+derivations. From <span class="inlinecode"><a class="idref" href="Fnormalization.html#P"><span class="id" type="variable">P</span></a></span> to <span class="inlinecode"><span class="id" type="var">E</span></span> we push non-syntax directed rules (to the
+leaves for equality and to the top for strengthening) and add the
+redundant <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#S"><span class="id" type="constructor">S</span></a></span> premises. And from <span class="inlinecode"><span class="id" type="var">E</span></span> to <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#S"><span class="id" type="constructor">S</span></a></span>, we remove the unnecessary
+<span class="inlinecode"><span class="id" type="var">E</span></span> premises.
+
+<div class="paragraph"> </div>
+
+<br/>
+<span class="inlinecode">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="Fnormalization.html#P"><span class="id" type="variable">P</span></a> | <a class="idref" href="Llanguage.html#F"><span class="id" type="module">F</span></a> | <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#S"><span class="id" type="constructor">S</span></a> |<br/>
+&nbsp;&nbsp;&nbsp;<a class="idref" href="mxx.html#mE"><span class="id" type="definition">mE</span></a> |&lt;--:--&gt;:   |<br/>
+&nbsp;&nbsp;&nbsp;<a class="idref" href="mxx.html#mS"><span class="id" type="definition">mS</span></a> |   :&lt;--:--&gt;|
+<div class="paragraph"> </div>
+
+</span>
+</div>
+<div class="code">
+<span class="id" type="keyword">Inductive</span> <a name="Version"><span class="id" type="inductive">Version</span></a> :=<br/>
+| <a name="vP"><span class="id" type="constructor">vP</span></a> <span class="comment">(*&nbsp;paper&nbsp;*)</span><br/>
+| <a name="vF"><span class="id" type="constructor">vF</span></a> <span class="comment">(*&nbsp;full&nbsp;*)</span><br/>
+| <a name="vS"><span class="id" type="constructor">vS</span></a> <span class="comment">(*&nbsp;soundness&nbsp;*)</span><br/>
+.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="Mode"><span class="id" type="definition">Mode</span></a> := (<a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#bool"><span class="id" type="inductive">bool</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#:type_scope:x_'*'_x"><span class="id" type="notation">×</span></a> <a class="idref" href="mxx.html#Version"><span class="id" type="inductive">Version</span></a>)%<span class="id" type="var">type</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+The condition <span class="inlinecode"><a class="idref" href="mxx.html#mE"><span class="id" type="definition">mE</span></a></span> <span class="inlinecode"><a class="idref" href="Llanguage.html#v"><span class="id" type="variable">v</span></a></span> is used for premises of <span class="inlinecode"><a class="idref" href="Fnormalization.html#P"><span class="id" type="variable">P</span></a></span> not used in <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#S"><span class="id" type="constructor">S</span></a></span>.
+These premises are thus available in both <span class="inlinecode"><a class="idref" href="Fnormalization.html#P"><span class="id" type="variable">P</span></a></span> and <span class="inlinecode"><span class="id" type="var">E</span></span> and necessary
+for extraction.
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Definition</span> <a name="mE"><span class="id" type="definition">mE</span></a> (<span class="id" type="var">v</span> : <a class="idref" href="mxx.html#Mode"><span class="id" type="definition">Mode</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">match</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#snd"><span class="id" type="definition">snd</span></a> <a class="idref" href="mxx.html#v"><span class="id" type="variable">v</span></a> <span class="id" type="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="mxx.html#vP"><span class="id" type="constructor">vP</span></a> ⇒ <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#True"><span class="id" type="inductive">True</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="mxx.html#vF"><span class="id" type="constructor">vF</span></a> ⇒ <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#True"><span class="id" type="inductive">True</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="mxx.html#vS"><span class="id" type="constructor">vS</span></a> ⇒ <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#False"><span class="id" type="inductive">False</span></a><br/>
+&nbsp;&nbsp;<span class="id" type="keyword">end</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+The condition <span class="inlinecode"><a class="idref" href="mxx.html#mS"><span class="id" type="definition">mS</span></a></span> <span class="inlinecode"><a class="idref" href="Llanguage.html#v"><span class="id" type="variable">v</span></a></span> is used for redundant premises of <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#S"><span class="id" type="constructor">S</span></a></span> and
+rules of <span class="inlinecode"><span class="id" type="var">E</span></span> not in <span class="inlinecode"><a class="idref" href="Fnormalization.html#P"><span class="id" type="variable">P</span></a></span>.
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Definition</span> <a name="mS"><span class="id" type="definition">mS</span></a> (<span class="id" type="var">v</span> : <a class="idref" href="mxx.html#Mode"><span class="id" type="definition">Mode</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">match</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#snd"><span class="id" type="definition">snd</span></a> <a class="idref" href="mxx.html#v"><span class="id" type="variable">v</span></a> <span class="id" type="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="mxx.html#vP"><span class="id" type="constructor">vP</span></a> ⇒ <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#False"><span class="id" type="inductive">False</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="mxx.html#vF"><span class="id" type="constructor">vF</span></a> ⇒ <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#True"><span class="id" type="inductive">True</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="mxx.html#vS"><span class="id" type="constructor">vS</span></a> ⇒ <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#True"><span class="id" type="inductive">True</span></a><br/>
+&nbsp;&nbsp;<span class="id" type="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Definition</span> <a name="mR"><span class="id" type="definition">mR</span></a> (<span class="id" type="var">v</span> : <a class="idref" href="mxx.html#Mode"><span class="id" type="definition">Mode</span></a>) :=<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">match</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#fst"><span class="id" type="definition">fst</span></a> <a class="idref" href="mxx.html#v"><span class="id" type="variable">v</span></a> <span class="id" type="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#true"><span class="id" type="constructor">true</span></a> ⇒ <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#True"><span class="id" type="inductive">True</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Datatypes.html#false"><span class="id" type="constructor">false</span></a> ⇒ <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#False"><span class="id" type="inductive">False</span></a><br/>
+&nbsp;&nbsp;<span class="id" type="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Hint Unfold</span> <a class="idref" href="mxx.html#Mode"><span class="id" type="definition">Mode</span></a> <a class="idref" href="mxx.html#mE"><span class="id" type="definition">mE</span></a> <a class="idref" href="mxx.html#mS"><span class="id" type="definition">mS</span></a> <a class="idref" href="mxx.html#mR"><span class="id" type="definition">mR</span></a>.<br/>
+</div>
+
+<div class="doc">
+<a name="lab112"></a><h4 class="section">Links: <span class="inlinecode"><a class="idref" href="Index.html#Index_v"><span class="id" type="inductive">Index_v</span></a></span> <a href="Toc.html">Table of contents</a> <a href="../">Main page</a></h4>
+
+</div>
+<div class="code">
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

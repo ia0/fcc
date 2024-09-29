@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link href="coqdoc.css" rel="stylesheet" type="text/css"/>
+<title>ext</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library ext</h1>
+
+<div class="code">
+<span class="id" type="keyword">Require</span> <span class="id" type="keyword">Export</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Logic.FunctionalExtensionality.html#"><span class="id" type="library">FunctionalExtensionality</span></a>.<br/>
+<span class="id" type="keyword">Require</span> <span class="id" type="keyword">Import</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Logic.ClassicalFacts.html#"><span class="id" type="library">ClassicalFacts</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Inductive</span> <a name="ext_v"><span class="id" type="inductive">ext_v</span></a> := .<br/>
+</div>
+
+<div class="doc">
+<a name="lab105"></a><h4 class="section">Links: <span class="inlinecode"><a class="idref" href="Index.html#Index_v"><span class="id" type="inductive">Index_v</span></a></span> <a href="Toc.html">Table of contents</a> <a href="../">Main page</a></h4>
+
+<div class="paragraph"> </div>
+
+ This file defines the extensionality properties we use in the
+formalization. They rely on two axioms of the Coq standard libraries:
+
+<div class="paragraph"> </div>
+
+<ul class="doclist">
+<li> <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Logic.ClassicalFacts.html#prop_extensionality"><span class="id" type="definition">prop_extensionality</span></a></span> for propositions and
+
+</li>
+<li> <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Logic.FunctionalExtensionality.html#functional_extensionality"><span class="id" type="lemma">functional_extensionality</span></a></span> for dependent products.
+
+</li>
+</ul>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Axiom</span> <a name="propositional_extensionality"><span class="id" type="axiom">propositional_extensionality</span></a> : <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Logic.ClassicalFacts.html#prop_extensionality"><span class="id" type="definition">prop_extensionality</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Lemma</span> <a name="and_extensionality"><span class="id" type="lemma">and_extensionality</span></a> : <span class="id" type="keyword">∀</span> (<span class="id" type="var">P</span> <span class="id" type="var">Q1</span> <span class="id" type="var">Q2</span> : <span class="id" type="keyword">Prop</span>), (<a class="idref" href="ext.html#P"><span class="id" type="variable">P</span></a> → <a class="idref" href="ext.html#Q1"><span class="id" type="variable">Q1</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="ext.html#Q2"><span class="id" type="variable">Q2</span></a>) → <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">(</span></a><a class="idref" href="ext.html#P"><span class="id" type="variable">P</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'/\'_x"><span class="id" type="notation">∧</span></a> <a class="idref" href="ext.html#Q1"><span class="id" type="variable">Q1</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">(</span></a><a class="idref" href="ext.html#P"><span class="id" type="variable">P</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'/\'_x"><span class="id" type="notation">∧</span></a> <a class="idref" href="ext.html#Q2"><span class="id" type="variable">Q2</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">)</span></a>.<br/>
+<span class="id" type="keyword">Proof</span>.<br/>
+<span class="id" type="tactic">intros</span>; <span class="id" type="tactic">apply</span> <a class="idref" href="ext.html#propositional_extensionality"><span class="id" type="axiom">propositional_extensionality</span></a>; <span class="id" type="tactic">split</span>; <span class="id" type="tactic">intros</span> [<span class="id" type="var">HP</span> <span class="id" type="var">HQ</span>].<br/>
+<span class="id" type="tactic">rewrite</span> &lt;- (<span class="id" type="var">H</span> <span class="id" type="var">HP</span>); <span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="tactic">rewrite</span> (<span class="id" type="var">H</span> <span class="id" type="var">HP</span>); <span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Lemma</span> <a name="arrow_extensionality"><span class="id" type="lemma">arrow_extensionality</span></a> : <span class="id" type="keyword">∀</span> (<span class="id" type="var">P</span> <span class="id" type="var">Q1</span> <span class="id" type="var">Q2</span> : <span class="id" type="keyword">Prop</span>), (<a class="idref" href="ext.html#P"><span class="id" type="variable">P</span></a> → <a class="idref" href="ext.html#Q1"><span class="id" type="variable">Q1</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="ext.html#Q2"><span class="id" type="variable">Q2</span></a>) → <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">(</span></a><a class="idref" href="ext.html#P"><span class="id" type="variable">P</span></a> → <a class="idref" href="ext.html#Q1"><span class="id" type="variable">Q1</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">(</span></a><a class="idref" href="ext.html#P"><span class="id" type="variable">P</span></a> → <a class="idref" href="ext.html#Q2"><span class="id" type="variable">Q2</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">)</span></a>.<br/>
+<span class="id" type="keyword">Proof</span>.<br/>
+<span class="id" type="tactic">intros</span>; <span class="id" type="tactic">apply</span> <a class="idref" href="ext.html#propositional_extensionality"><span class="id" type="axiom">propositional_extensionality</span></a>; <span class="id" type="tactic">split</span>; <span class="id" type="tactic">intros</span> <span class="id" type="var">HQ</span> <span class="id" type="var">HP</span>.<br/>
+<span class="id" type="tactic">rewrite</span> &lt;- (<span class="id" type="var">H</span> <span class="id" type="var">HP</span>); <span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="tactic">rewrite</span> (<span class="id" type="var">H</span> <span class="id" type="var">HP</span>); <span class="id" type="tactic">auto</span>.<br/>
+<span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Lemma</span> <a name="forall_extensionality"><span class="id" type="lemma">forall_extensionality</span></a> : <span class="id" type="keyword">∀</span> <span class="id" type="var">A</span> (<span class="id" type="var">P</span> <span class="id" type="var">Q</span> : <a class="idref" href="ext.html#A"><span class="id" type="variable">A</span></a> → <span class="id" type="keyword">Prop</span>), <a class="idref" href="ext.html#P"><span class="id" type="variable">P</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="ext.html#Q"><span class="id" type="variable">Q</span></a> → <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">(</span></a><span class="id" type="keyword">∀</span> <span class="id" type="var">x</span>, <a class="idref" href="ext.html#P"><span class="id" type="variable">P</span></a> <a class="idref" href="ext.html#x"><span class="id" type="variable">x</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">(</span></a><span class="id" type="keyword">∀</span> <span class="id" type="var">x</span>, <a class="idref" href="ext.html#Q"><span class="id" type="variable">Q</span></a> <a class="idref" href="ext.html#x"><span class="id" type="variable">x</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">)</span></a>.<br/>
+<span class="id" type="keyword">Proof</span>. <span class="id" type="tactic">intros</span> <span class="id" type="var">A</span> <span class="id" type="var">P</span> <span class="id" type="var">Q</span> <span class="id" type="var">Heq</span>; <span class="id" type="tactic">rewrite</span> <span class="id" type="var">Heq</span>; <span class="id" type="tactic">reflexivity</span>. <span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Lemma</span> <a name="exists_extensionality"><span class="id" type="lemma">exists_extensionality</span></a> : <span class="id" type="keyword">∀</span> <span class="id" type="var">A</span> (<span class="id" type="var">P</span> <span class="id" type="var">Q</span> : <a class="idref" href="ext.html#A"><span class="id" type="variable">A</span></a> → <span class="id" type="keyword">Prop</span>), <a class="idref" href="ext.html#P"><span class="id" type="variable">P</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="ext.html#Q"><span class="id" type="variable">Q</span></a> → <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">(</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:'exists'_x_'..'_x_','_x"><span class="id" type="notation">∃</span></a> <span class="id" type="var">x</span><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:'exists'_x_'..'_x_','_x"><span class="id" type="notation">,</span></a> <a class="idref" href="ext.html#P"><span class="id" type="variable">P</span></a> <a class="idref" href="ext.html#x"><span class="id" type="variable">x</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">(</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:'exists'_x_'..'_x_','_x"><span class="id" type="notation">∃</span></a> <span class="id" type="var">x</span><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:'exists'_x_'..'_x_','_x"><span class="id" type="notation">,</span></a> <a class="idref" href="ext.html#Q"><span class="id" type="variable">Q</span></a> <a class="idref" href="ext.html#x"><span class="id" type="variable">x</span></a><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">)</span></a>.<br/>
+<span class="id" type="keyword">Proof</span>. <span class="id" type="tactic">intros</span> <span class="id" type="var">A</span> <span class="id" type="var">P</span> <span class="id" type="var">Q</span> <span class="id" type="var">Heq</span>; <span class="id" type="tactic">rewrite</span> <span class="id" type="var">Heq</span>; <span class="id" type="tactic">reflexivity</span>. <span class="id" type="keyword">Qed</span>.<br/>
+</div>
+
+<div class="doc">
+<a name="lab106"></a><h4 class="section">Links: <span class="inlinecode"><a class="idref" href="Index.html#Index_v"><span class="id" type="inductive">Index_v</span></a></span> <a href="Toc.html">Table of contents</a> <a href="../">Main page</a></h4>
+
+</div>
+<div class="code">
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

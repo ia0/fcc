@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link href="coqdoc.css" rel="stylesheet" type="text/css"/>
+<title>minmax</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library minmax</h1>
+
+<div class="code">
+<span class="id" type="keyword">Require</span> <span class="id" type="keyword">Import</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.omega.Omega.html#"><span class="id" type="library">Omega</span></a>.<br/>
+<span class="id" type="keyword">Require</span> <span class="id" type="keyword">Import</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Min.html#"><span class="id" type="library">Min</span></a>.<br/>
+<span class="id" type="keyword">Require</span> <span class="id" type="keyword">Import</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Max.html#"><span class="id" type="library">Max</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Inductive</span> <a name="minmax_v"><span class="id" type="inductive">minmax_v</span></a> := .<br/>
+</div>
+
+<div class="doc">
+<a name="lab109"></a><h4 class="section">Links: <span class="inlinecode"><a class="idref" href="Index.html#Index_v"><span class="id" type="inductive">Index_v</span></a></span> <a href="Toc.html">Table of contents</a> <a href="../">Main page</a></h4>
+
+<div class="paragraph"> </div>
+
+ This file defines a tactic <span class="inlinecode"><a class="idref" href="minmax.html#"><span class="id" type="library">minmax</span></a></span> to help with arithmetic
+involving <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#min"><span class="id" type="definition">min</span></a></span> and <span class="inlinecode"><a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#max"><span class="id" type="definition">max</span></a></span>.
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Lemma</span> <a name="le_min_r'"><span class="id" type="lemma">le_min_r'</span></a> : <span class="id" type="keyword">∀</span> <span class="id" type="var">m</span> <span class="id" type="var">n</span> <span class="id" type="var">n'</span>, <a class="idref" href="minmax.html#n"><span class="id" type="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#:nat_scope:x_'<='_x"><span class="id" type="notation">≤</span></a> <a class="idref" href="minmax.html#n'"><span class="id" type="variable">n'</span></a> → <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#min"><span class="id" type="definition">min</span></a> <a class="idref" href="minmax.html#m"><span class="id" type="variable">m</span></a> <a class="idref" href="minmax.html#n"><span class="id" type="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#:nat_scope:x_'<='_x"><span class="id" type="notation">≤</span></a> <a class="idref" href="minmax.html#n'"><span class="id" type="variable">n'</span></a>.<br/>
+<span class="id" type="keyword">Proof</span>. <span class="id" type="tactic">intros</span>; <span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Le.html#le_trans"><span class="id" type="lemma">le_trans</span></a> <span class="id" type="keyword">with</span> (<span class="id" type="var">m</span> := <span class="id" type="var">n</span>); <span class="id" type="tactic">auto</span>; <span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Min.html#le_min_r"><span class="id" type="definition">le_min_r</span></a>. <span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Lemma</span> <a name="le_min_l'"><span class="id" type="lemma">le_min_l'</span></a> : <span class="id" type="keyword">∀</span> <span class="id" type="var">m</span> <span class="id" type="var">n</span> <span class="id" type="var">m'</span>, <a class="idref" href="minmax.html#m"><span class="id" type="variable">m</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#:nat_scope:x_'<='_x"><span class="id" type="notation">≤</span></a> <a class="idref" href="minmax.html#m'"><span class="id" type="variable">m'</span></a> → <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#min"><span class="id" type="definition">min</span></a> <a class="idref" href="minmax.html#m"><span class="id" type="variable">m</span></a> <a class="idref" href="minmax.html#n"><span class="id" type="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#:nat_scope:x_'<='_x"><span class="id" type="notation">≤</span></a> <a class="idref" href="minmax.html#m'"><span class="id" type="variable">m'</span></a>.<br/>
+<span class="id" type="keyword">Proof</span>. <span class="id" type="tactic">intros</span>; <span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Le.html#le_trans"><span class="id" type="lemma">le_trans</span></a> <span class="id" type="keyword">with</span> (<span class="id" type="var">m</span> := <span class="id" type="var">m</span>); <span class="id" type="tactic">auto</span>; <span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Min.html#le_min_l"><span class="id" type="definition">le_min_l</span></a>. <span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Lemma</span> <a name="le_max_r'"><span class="id" type="lemma">le_max_r'</span></a> : <span class="id" type="keyword">∀</span> <span class="id" type="var">m</span> <span class="id" type="var">n</span> <span class="id" type="var">n'</span>, <a class="idref" href="minmax.html#n'"><span class="id" type="variable">n'</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#:nat_scope:x_'<='_x"><span class="id" type="notation">≤</span></a> <a class="idref" href="minmax.html#n"><span class="id" type="variable">n</span></a> → <a class="idref" href="minmax.html#n'"><span class="id" type="variable">n'</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#:nat_scope:x_'<='_x"><span class="id" type="notation">≤</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#max"><span class="id" type="definition">max</span></a> <a class="idref" href="minmax.html#m"><span class="id" type="variable">m</span></a> <a class="idref" href="minmax.html#n"><span class="id" type="variable">n</span></a>.<br/>
+<span class="id" type="keyword">Proof</span>. <span class="id" type="tactic">intros</span>; <span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Le.html#le_trans"><span class="id" type="lemma">le_trans</span></a> <span class="id" type="keyword">with</span> (<span class="id" type="var">m</span> := <span class="id" type="var">n</span>); <span class="id" type="tactic">auto</span>; <span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Max.html#le_max_r"><span class="id" type="definition">le_max_r</span></a>. <span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Lemma</span> <a name="le_max_l'"><span class="id" type="lemma">le_max_l'</span></a> : <span class="id" type="keyword">∀</span> <span class="id" type="var">m</span> <span class="id" type="var">n</span> <span class="id" type="var">m'</span>, <a class="idref" href="minmax.html#m'"><span class="id" type="variable">m'</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#:nat_scope:x_'<='_x"><span class="id" type="notation">≤</span></a> <a class="idref" href="minmax.html#m"><span class="id" type="variable">m</span></a> → <a class="idref" href="minmax.html#m'"><span class="id" type="variable">m'</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#:nat_scope:x_'<='_x"><span class="id" type="notation">≤</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Init.Peano.html#max"><span class="id" type="definition">max</span></a> <a class="idref" href="minmax.html#m"><span class="id" type="variable">m</span></a> <a class="idref" href="minmax.html#n"><span class="id" type="variable">n</span></a>.<br/>
+<span class="id" type="keyword">Proof</span>. <span class="id" type="tactic">intros</span>; <span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Le.html#le_trans"><span class="id" type="lemma">le_trans</span></a> <span class="id" type="keyword">with</span> (<span class="id" type="var">m</span> := <span class="id" type="var">m</span>); <span class="id" type="tactic">auto</span>; <span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Max.html#le_max_l"><span class="id" type="definition">le_max_l</span></a>. <span class="id" type="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" type="keyword">Ltac</span> <span class="id" type="var">minmax</span> :=<br/>
+&nbsp;&nbsp;<span class="id" type="tactic">repeat</span> (<span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Min.html#min_glb"><span class="id" type="definition">min_glb</span></a> || <span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Max.html#max_lub"><span class="id" type="definition">max_lub</span></a>);<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">let</span> <span class="id" type="var">rec</span> <span class="id" type="var">aux</span> := <span class="id" type="tactic">omega</span> || (<span class="id" type="tactic">apply</span> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl2/stdlib/Coq.Arith.Le.html#le_n_S"><span class="id" type="lemma">le_n_S</span></a>; <span class="id" type="var">aux</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|| (<span class="id" type="tactic">apply</span> <a class="idref" href="minmax.html#le_min_l'"><span class="id" type="lemma">le_min_l'</span></a>; <span class="id" type="var">aux</span>) || (<span class="id" type="tactic">apply</span> <a class="idref" href="minmax.html#le_min_r'"><span class="id" type="lemma">le_min_r'</span></a>; <span class="id" type="var">aux</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|| (<span class="id" type="tactic">apply</span> <a class="idref" href="minmax.html#le_max_l'"><span class="id" type="lemma">le_max_l'</span></a>; <span class="id" type="var">aux</span>) || (<span class="id" type="tactic">apply</span> <a class="idref" href="minmax.html#le_max_r'"><span class="id" type="lemma">le_max_r'</span></a>; <span class="id" type="var">aux</span>)<br/>
+&nbsp;&nbsp;<span class="id" type="keyword">in</span> <span class="id" type="var">aux</span>.<br/>
+</div>
+
+<div class="doc">
+<a name="lab110"></a><h4 class="section">Links: <span class="inlinecode"><a class="idref" href="Index.html#Index_v"><span class="id" type="inductive">Index_v</span></a></span> <a href="Toc.html">Table of contents</a> <a href="../">Main page</a></h4>
+
+</div>
+<div class="code">
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>
